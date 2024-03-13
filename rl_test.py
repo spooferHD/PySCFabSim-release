@@ -36,7 +36,7 @@ def main():
     if wandb:
         from plugins.wandb_plugin import WandBPlugin
         plugins.append(WandBPlugin())
-    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, max_steps=1000000000, plugins=plugins)
+    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, max_steps=1000000000, plugins=[])
     obs = env.reset()
     #print("obs", obs)
     reward = 0
@@ -52,24 +52,24 @@ def main():
         
         action, _states = model.predict(obs, deterministic=deterministic)
         #print("action", action)
-        if ranag:
-            if ranag == 'random':
-                action = env.action_space.sample()
-            else:
-                state = obs[4:]
-                #print("State", state)
-                actions = config['action_count']
-                one_length = len(state) // actions
-                #print("one_length", one_length)
-                descending = True
-                index = 0
-                sortable = []
-                for i in range(actions):
-                    sortable.append((state[one_length * i + index], i))
-                sortable.sort(reverse=descending)
-                #print("sortable", sortable)
-                action = sortable[0][1]
-        #         print("action",action)
+        # if ranag:
+        #     if ranag == 'random':
+        #         action = env.action_space.sample()
+        #     else:
+        #         state = obs[4:]
+        #         #print("State", state)
+        #         actions = config['action_count']
+        #         one_length = len(state) // actions
+        #         #print("one_length", one_length)
+        #         descending = True
+        #         index = 0
+        #         sortable = []
+        #         for i in range(actions):
+        #             sortable.append((state[one_length * i + index], i))
+        #         sortable.sort(reverse=descending)
+        #         #print("sortable", sortable)
+        #         action = sortable[0][1]
+        # #         print("action",action)
         obs, r, done, info = env.step(action)
        # print("obs", obs)   
         if r < 0:
