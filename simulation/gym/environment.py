@@ -88,9 +88,13 @@ class DynamicSCFabSimulationEnvironment(Env):
             elif self.reward_type == 3:
                 reward += statistics.mean(
                     [min(1, j.cr(self.instance.current_time) - 1) for j in self.instance.active_lots])
-            elif self.reward_type == 7:
-                reward += statistics.mean(
-                    [l.notlateness(self.instance.current_time) for l in self.instance.active_lots])
+            elif self.reward_type == 10:
+                for i in range(self.lots_done, len(self.instance.done_lots)):
+                    lot = self.instance.done_lots[i]
+                    reward -= ((lot.done_at - lot.release_at) / 3600)*lot.priority/10
+            # elif self.reward_type == 7:
+            #     reward += statistics.mean(                                                                    #l.notlateness existiert nicht
+            #         [l.notlateness(self.instance.current_time) for l in self.instance.active_lots])
             else:
                 pass
             if violated_minruns:
