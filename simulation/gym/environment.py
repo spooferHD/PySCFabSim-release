@@ -8,6 +8,8 @@ from gym import Env
 
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release','simulation'))
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release','simulation', 'gym'))
+sys.path.append(os.path.join('data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation'))
+sys.path.append(os.path.join('data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation', 'gym'))
 from classes import Machine, Lot
 from file_instance import FileInstance
 from greedy import get_lots_to_dispatch_by_machine
@@ -32,7 +34,7 @@ STATE_COMPONENTS_DEMO = (
 class DynamicSCFabSimulationEnvironment(Env):
 
     def __init__(self, num_actions, active_station_group, days, dataset, dispatcher, seed, max_steps,
-                 reward_type, action, state_components):
+                 reward_type, action, state_components, plugins=None):
         self.did_reset = False
         self.files = read_all('datasets/' + dataset)
         self.instance = None
@@ -51,6 +53,7 @@ class DynamicSCFabSimulationEnvironment(Env):
         self.reward_type = reward_type
         self.mavg = 0
         self.state_components = state_components
+        self.plugins = plugins  
         self.reset()
 
     def seed(self, seed=None):
@@ -85,9 +88,13 @@ class DynamicSCFabSimulationEnvironment(Env):
             elif self.reward_type == 3:
                 reward += statistics.mean(
                     [min(1, j.cr(self.instance.current_time) - 1) for j in self.instance.active_lots])
-            elif self.reward_type == 7:
-                reward += statistics.mean(
-                    [l.notlateness(self.instance.current_time) for l in self.instance.active_lots])
+            elif self.reward_type == 10:
+                for i in range(self.lots_done, len(self.instance.done_lots)):
+                    lot = self.instance.done_lots[i]
+                    reward -= ((lot.done_at - lot.release_at) / 3600)*lot.priority/10
+            # elif self.reward_type == 7:
+            #     reward += statistics.mean(                                                                    #l.notlateness existiert nicht
+            #         [l.notlateness(self.instance.current_time) for l in self.instance.active_lots])
             else:
                 pass
             if violated_minruns:
@@ -103,7 +110,7 @@ class DynamicSCFabSimulationEnvironment(Env):
             self.actual_step = 0
             self.lots_done = 0
             run_to = 3600 * 24 * self.days
-            self.instance = FileInstance(self.files, run_to, True, [])
+            self.instance = FileInstance(self.files, run_to, True, self.plugins)
             Randomizer().random.seed(self.seed_val)
             self.seed_val += 1
             self.next_step()

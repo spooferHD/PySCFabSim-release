@@ -1,5 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
+import os
+import csv
 
 from classes import Machine, Route, Lot
 from dispatching.dm_lot_for_machine import LotForMachineDispatchManager
@@ -38,6 +40,7 @@ class Instance:
         self.done_lots: List[Lot] = []
 
         self.events = EventQueue()
+        #self.pmsbd = defaultdict(lambda: {'PM_count':0,'PM_in_std': 0 ,'BD_count':0, 'BD_in_std': 0})        
 
         self.current_time = 0
 
@@ -56,15 +59,38 @@ class Instance:
     @property
     def current_time_days(self):
         return self.current_time / 3600 / 24
-
-    def next_step(self):
+    
+    def process_until_calc(self):
         process_until = []
         if len(self.events.arr) > 0:
             process_until.append(max(0, self.events.first.timestamp))
         process_until.append(max(0, self.dispatchable_lots[0].release_at))
-        process_until = min(process_until)
+        return min(process_until)
+    
+    def move_event(self, ev):
+        temp_time = 0
+        for ev_m in ev.machine.events:
+            if ev_m.timestamp > temp_time:
+                temp_time = ev_m.timestamp
+                
+        delay = temp_time  - ev.timestamp     
+        ev.timestamp += delay
+        self.add_event(ev)
+
+
+    def next_step(self):
+        process_until = self.process_until_calc()
         while len(self.events.arr) > 0 and self.events.first.timestamp <= process_until:
             ev = self.events.pop_first()
+            # if "BreakdownEvent" in str(ev) and ev.is_breakdown != True:
+            #     if len(ev.machine.events) == 0:
+            #         self.current_time = max(0, ev.timestamp, self.current_time)
+            #         # print(f'Time stamp {self.current_time}')
+            #         ev.handle(self)
+            #     else: 
+            #         self.move_event(ev)
+            #         process_until = self.process_until_calc()
+            # else:
             self.current_time = max(0, ev.timestamp, self.current_time)
             # print(f'Time stamp {self.current_time}')
             ev.handle(self)
@@ -144,6 +170,16 @@ class Instance:
                 machine_time += s
                 machine.pieces_until_maintenance[i] = machine.piece_per_maintenance[i]
                 machine.pmed_time += s
+        # compute timebased preventive maintenance requirement
+        look_ahead_time = self.current_time + machine_time + setup_time
+        for event in self.events.arr:
+            if "BreakdownEvent" in str(event) and event.is_breakdown == False and event.machine.idx == machine.idx and event.timestamp <= look_ahead_time:
+                self.events.remove(event)
+                s = event.handle_timebased_pm(self)
+                machine_time += s
+            if event.timestamp > look_ahead_time:
+                    break
+
         # if there is ltl dedication, dedicate lot for selected step
         for lot in lots:
             if lot.actual_step.lot_to_lens_dedication is not None:
@@ -185,13 +221,13 @@ class Instance:
         new_setup = lots[0].actual_step.setup_needed
         if new_setup != '' and machine.current_setup != new_setup:
             if lots[0].actual_step.setup_time is not None:
-                setup_time = lots[0].actual_step.setup_time
+                setup_time = lots[0].actual_step.setup_time             # SetupTime für in der Route geplante Setups
             elif (machine.current_setup, new_setup) in setups:
-                setup_time = setups[(machine.current_setup, new_setup)]
+                setup_time = setups[(machine.current_setup, new_setup)] # SetupTime für in setup.txt für DE_BE_ Maschinen
             elif ('', new_setup) in setups:
-                setup_time = setups[('', new_setup)]
+                setup_time = setups[('', new_setup)]                    # SetupTime für in setup.txt für Implant_91/128/131
             else:
-                setup_time = 0
+                setup_time = 0                                          # SetupTime, wenn in DE_BE kein Setup vorhanden ist
         else:
             setup_time = 0
         if new_setup in self.setup_min_run and machine.min_runs_left is None and setup_time > 0:
@@ -218,7 +254,7 @@ class Instance:
 
     def handle_breakdown(self, machine, delay):
         ta = []
-        for ev in machine.events:
+        for ev in machine.events: # nur Events mit LoteDone oder MachineDone werden verschoben
             if ev in self.events.arr:
                 ta.append(ev)
                 self.events.remove(ev)

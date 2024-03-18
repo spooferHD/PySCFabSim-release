@@ -126,8 +126,9 @@ class WandBPlugin(IPlugin):
                 'machines/avg_run_per_setup': statistics.mean(self.wandb_avg_steps_after_setup),
                 'machines/avg_run_per_setup_for_enforced': statistics.mean(self.wandb_avg_steps_after_setup_2),
                 'machines/avg_run_per_setup_NOT_enforced': statistics.mean(self.wandb_avg_steps_after_setup_1),
-                'lots/done_in_time': len([l for l in instance.done_lots if l.done_at <= l.deadline_at]),
+                'lots/done_in_time': len([l for l in instance.done_lots if l.done_at == l.deadline_at]),
                 'lots/done_late': len([l for l in instance.done_lots if l.done_at > l.deadline_at]),
+                'lots/done_early': len([l for l in instance.done_lots if l.done_at < l.deadline_at]),
                 'lots/cqt_violations': self.wandb_cqt_violations,
             })
             self.wandb_lots_already_done = len(instance.done_lots)

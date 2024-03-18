@@ -19,7 +19,7 @@ from simulation.gym.sample_envs import DEMO_ENV_1
 
 
 def main():
-    to_train = 100000
+    to_train = 10000000 # 608000 für 730 Tage --> 32 Jahre Trainingszeit (mit Initialisierungsphase)
     t = time.time()
 
     class MyCallBack(CheckpointCallback):
@@ -34,14 +34,15 @@ def main():
                 sys.stderr.write(f'\r{self.num_timesteps} / {to_train} {perc}% {round(remaining, 2)} hours left    {env.instance.current_time_days}      ')
             return super().on_step()
 
-    fn = argv[1]
+    #fn = argv[1]
+    fn = "experiments/0_ds_HVLM_a9_tp730_reward2_di_fifo_TF\config.json"
     with open(fn, 'r') as config:
         p = json.load(config)['params']
     args = dict(num_actions=p['action_count'], active_station_group=p['station_group'],
                 days=p['training_period'], dataset='SMT2020_' + p['dataset'],
                 dispatcher=p['dispatcher'])
     print("Args angenommen")
-    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'])
+    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'], plugins=[])
     print("Env erstellt")
     #eval_env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=777, max_steps=10000, reward_type=p['reward'])
     print("Alles erstellt - ich lerne jz")
