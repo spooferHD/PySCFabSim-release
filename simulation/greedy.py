@@ -27,27 +27,6 @@ def dispatching_combined_permachine(ptuple_fcn, machine, time, setups):
     for lot in machine.waiting_lots:
         lot.ptuple = ptuple_fcn(lot, time, machine, setups)
 
-# def get_machine_times_max(setups, lots, machine):
-#         proc_t_samp = lots[0].actual_step.processing_time.max()
-#         if lots[0].actual_step.processing_time == lots[0].actual_step.cascading_time:
-#             cascade_t_samp = proc_t_samp
-#         else:
-#             cascade_t_samp = lots[0].actual_step.cascading_time.max()
-#         machine_time = cascade_t_samp + (machine.load_time + machine.unload_time if not machine.cascading else 0)
-#         new_setup = lots[0].actual_step.setup_needed
-#         if new_setup != '' and machine.current_setup != new_setup:
-#             if lots[0].actual_step.setup_time is not None:
-#                 setup_time = lots[0].actual_step.setup_time             # SetupTime für in der Route geplante Setups
-#             elif (machine.current_setup, new_setup) in setups:
-#                 setup_time = setups[(machine.current_setup, new_setup)] # SetupTime für in setup.txt für DE_BE_ Maschinen
-#             elif ('', new_setup) in setups:
-#                 setup_time = setups[('', new_setup)]                    # SetupTime für in setup.txt für Implant_91/128/131
-#             else:
-#                 setup_time = 0                                          # SetupTime, wenn in DE_BE kein Setup vorhanden ist
-#         else:
-#             setup_time = 0
-        
-#         return machine_time, setup_time
         
 def find_alternative_machine(instance, lots, machine):
     m: Machine
@@ -86,34 +65,7 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
     else:
         # dispatch single lot
         lots = [lot]
-    #1. Beachte wake up Least Setup Rule -> wenn maschine in idle mit setup schon drin -> nimm die 
-    #2. bei mehr als 2 frei Maschinen dieser Familie wird die wake_LeastSetupTime verwendet -> Maschine mit der geringsten Setup Zeit
-    # if lots is not None and machine.current_setup != lots[0].actual_step.setup_needed: #aktuelle Los-Setup nicht leer und stimmt nicht mit der machine-Setup überein
-    #     m: Machine
-    #     for m in instance.family_machines[machine.family]: #hier wird eine Maschine gesucht, wo das Setup dem Los-Setup entspricht
-    #         if m in instance.usable_machines and m.current_setup == lots[0].actual_step.setup_needed:  
-    #             machine = m
-    #             break
-    
-    # if lots is not None:
-    #     if len(lot.dedications) > 1:
-    #         for d in lot.dedications:
-    #             if lot.actual_step.idx +1 == d:
-    #                 found_machine = False
-    #                 for m in instance.usable_machines:
-    #                     if lot.dedications[d] == m.idx:
-    #                         machine = m
-    #                         lot.dedications.pop(d)
-    #                         found_machine = True
-    #                         break
-    #                 if found_machine:
-    #                     break
-                
-    #                 machine = None  
-    #         else:
-    #             find_alternative_machine(instance, lots, machine)
-    #     else:
-    #         find_alternative_machine(instance, lots, machine)
+   
     if lots is not None:
         if len(lot.dedications) > 1:
             for d in lot.dedications:
@@ -129,38 +81,9 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
                 find_alternative_machine(instance, lots, machine)
         else:
             find_alternative_machine(instance, lots, machine)
-            # machine_list = []
-            # machine_not_useable = []
-            # for m in instance.usable_machines:
-            #     machine_list.append(m.idx)
-            # machine_time, setup_time = get_machine_times_max(instance.setups, lots, machine)
-            # look_ahead_time = instance.current_time + machine_time + setup_time
-            # machine = None
-            # for event in instance.events.arr:
-            #     if "BreakdownEvent" in str(event) and event.is_breakdown == False and event.machine.family == lots[0].actual_step.family and event.timestamp <= look_ahead_time:
-            #         machine_not_useable.append(event.machine.idx)
-                
-            #     if event.timestamp > look_ahead_time:
-            #         break
-            # # Nutze Machine.next_PM_zeit-Attribut um zu prüfen, ob die Maschine in der Zukunft eine PM hat -> nicht möglich, da dort nur die größte Wartung drin steht
-            # for ma in instance.usable_machines:
-            #     if ma.idx not in machine_not_useable:
-            #         if lot.actual_step.setup_needed == '':   
-            #             machine = ma
-            #             break
-            #         else:
-            #             if ma.current_setup == lots[0].actual_step.setup_needed:
-            #                 machine = ma
-            #                 break
-            # if machine is None:
-            #     for ma in instance.usable_machines:
-            #         if ma.idx not in machine_not_useable:
-            #             machine = ma
-            #             break
-        
-     
+            
     if machine.min_runs_left is not None and machine.min_runs_setup != lots[0].actual_step.setup_needed:
-    #if machine.min_runs_left is not None and machine.min_runs_setup != lots[0].actual_step.setup_needed: # Test 5
+   
         lots = None
     
     return machine, lots
@@ -219,11 +142,7 @@ def run_greedy():
     p.add_argument('--alg', type=str, default='l4m', choices=['l4m', 'm4l'])
     a = p.parse_args()
 
-    a.dataset = "SMT2020_HVLM"
-    a.days = 730
-    a.dispatcher = "fifo"
-    #a.seed = 42
-
+    
     sys.stderr.write('Loading ' + a.dataset + ' for ' + str(a.days) + ' days, using ' + a.dispatcher + '\n')
     sys.stderr.flush()
 
@@ -275,11 +194,4 @@ def run_greedy():
     interval = datetime.now() - start_time
     print(instance.current_time_days, ' days simulated in ', interval)
     print_statistics(instance, a.days, a.dataset, a.dispatcher, method='greedy_seed' + str(a.seed))
-    # filename = 'pmbr_log.txt'
     
-    # with open(filename, 'w') as file:
-    #     titel = 'Maschine\tPM_count\tPM_in_std\tBD_count\tBD_in_std\n'
-    #     file.write(f'{titel}\n\n')
-    #     for machine in sorted(list(instance.pmsbd.keys())):
-    #         if instance.pmsbd[machine]['PM_count'] > 0:
-    #             file.write(str(machine) + "\t" + str(instance.pmsbd[machine]['PM_count']) + "\t" + str(instance.pmsbd[machine]['PM_in_std'])+"\t"+str(instance.pmsbd[machine]['BD_count']) + "\t" + str(instance.pmsbd[machine]['BD_in_std']) + "\n")
