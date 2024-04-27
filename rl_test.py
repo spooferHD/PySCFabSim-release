@@ -28,8 +28,8 @@ def main():
     args = dict(seed=0, num_actions=9, active_station_group='<Diffusion_FE_120>', days=testing_days,
                 dataset='SMT2020_' + 'HVLM', dispatcher='fifo', reward_type=2)
     
-    #args = dict(seed=0, num_actions=config['action_count'], active_station_group=config['station_group'], days=testing_days,
-    #            dataset='SMT2020_' + config['dataset'], dispatcher=config['dispatcher'], reward_type=config['reward'])
+    args = dict(seed=0, num_actions=config['action_count'], active_station_group=config['station_group'], days=testing_days,
+                dataset='SMT2020_' + config['dataset'], dispatcher=config['dispatcher'], reward_type=config['reward'])
     
     
     plugins = []
@@ -41,7 +41,7 @@ def main():
     #print("obs", obs)
     reward = 0
 
-    checkpoints = [180, 365, testing_days]
+    checkpoints = [ 365, testing_days]
     current_checkpoint = 0
 
     steps = 0
@@ -88,7 +88,7 @@ def main():
         chp = checkpoints[current_checkpoint]
         if env.instance.current_time_days > chp:
             print(f'{checkpoints[current_checkpoint]} days')
-            print_statistics(env.instance, chp, config['dataset'], config['dispatcher'], method=f'rl{chp}', dir=argv[1])
+            print_statistics(env.instance, chp, config['dataset'], config['dispatcher'], method=f'rl{chp}', dir=arg1)
             print('=================')
             stdout.flush()
             current_checkpoint += 1
