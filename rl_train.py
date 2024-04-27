@@ -11,7 +11,7 @@ from stable_baselines3 import PPO
 from wandb.integration.sb3 import WandbCallback
 
 from simulation.gym.environment import DynamicSCFabSimulationEnvironment
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 from simulation.greedy_RL import run_greedy
 from sys import argv
 
@@ -19,9 +19,10 @@ from simulation.gym.sample_envs import DEMO_ENV_1
 
 
 def main():
+    to_train = 608000  #10000000 # 608000 für 730 Tage --> 32 Jahre Trainingszeit (mit Initialisierungsphase)
     greedy_days = 100
     t = time.time()
-
+    save_freq = 500 
     class MyCallBack(CheckpointCallback):
 
         def on_step(self) -> bool:
@@ -52,16 +53,18 @@ def main():
     eval_env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args_eval, days= 265, seed=777, max_steps=0, reward_type=p['reward'], greedy_instance=greedy_instance,plugins=[])
     print("Alles erstellt - ich lerne jz")
     model = PPO("MlpPolicy", env, verbose=1)
-
+    #Callbacks
     p = os.path.dirname(os.path.realpath(fn))
-    checkpoint_callback = MyCallBack(save_freq=100000, save_path=p, name_prefix='checkpoint_')
-    #model.learn(
+    checkpoint_callback_MyCallBack = MyCallBack(save_freq=100000, save_path=p, name_prefix='checkpoint_')
+    checkpoint_callback_eval = EvalCallback(eval_env, best_model_save_path=p+'/eval/best_model/',log_path=p+'/eval/', eval_freq=2000000, deterministic=True, render=False )
+    callback= [checkpoint_callback_MyCallBack,checkpoint_callback_eval] 
+    # model.learn(
     #    total_timesteps=to_train, eval_freq=4000000, eval_env=eval_env, n_eval_episodes=1,
     #    callback=checkpoint_callback
-    #)
+    # )
     model.learn(
         total_timesteps=to_train,
-        callback=checkpoint_callback
+        callback=callback,
     )
     print("Ich sichere")
     model.save(os.path.join(p, 'trained.weights'))
