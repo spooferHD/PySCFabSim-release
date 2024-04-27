@@ -4,6 +4,7 @@ import json
 import os
 from sys import argv, stdout
 import sys
+import argparse
 
 from stable_baselines3 import PPO
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release','simulation'))
@@ -14,19 +15,20 @@ from simulation.stats import print_statistics
 
 
 def main():
-    print("Starting Test")
-    wandb = True
-    testing_days = 365 * 2
+
+    wandb = True 
     t = datetime.datetime.now()
     #ranag = 'random' in argv[2]
     ranag =  "trained.weights"
-    arg1 = "experiments/0_ds_HVLM_a9_tp365_reward2_di_fifo_Di"
-    #if not ranag:
+    #arg1 = "experiments/0_ds_HVLM_a9_tp365_reward2_di_fifo_Di"
+    arg1 = argv[1]
+    p = argparse.ArgumentParser()
+    p.add_argument('--days', type=int)
+    a = p.parse_args()
+    testing_days = a.days
     model = PPO.load(os.path.join(arg1, ranag))
     with io.open(os.path.join(arg1, "config.json"), "r") as f:
         config = json.load(f)['params']
-    args = dict(seed=0, num_actions=9, active_station_group='<Diffusion_FE_120>', days=testing_days,
-                dataset='SMT2020_' + 'HVLM', dispatcher='fifo', reward_type=2)
     
     args = dict(seed=0, num_actions=config['action_count'], active_station_group=config['station_group'], days=testing_days,
                 dataset='SMT2020_' + config['dataset'], dispatcher=config['dispatcher'], reward_type=config['reward'])
