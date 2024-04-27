@@ -6,10 +6,8 @@ import sys
 import gym
 from gym import Env
 
-sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release','simulation'))
-sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release','simulation', 'gym'))
-sys.path.append(os.path.join('data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation'))
-sys.path.append(os.path.join('data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation', 'gym'))
+sys.path.append(os.path.join(os.path.sep,'data','horse','ws','wiro085f-WsRodmann','RL_Version','PySCFabSim', 'simulation'))
+sys.path.append(os.path.join(os.path.sep,'data','horse','ws','wiro085f-WsRodmann','RL_Version','PySCFabSim', 'simulation', 'gym'))
 from classes import Machine, Lot
 from file_instance import FileInstance
 from greedy import get_lots_to_dispatch_by_machine
@@ -269,9 +267,6 @@ class DynamicSCFabSimulationEnvironment(Env):
                     elif len(tool.events) == 0 and len(tool.waiting_lots) >= 6:
                         part_3 -= 10
                 reward = 1*part_1 + 1*part_2 + 1*part_3
-           
-            
-            
             # elif self.reward_type == 7:
             #     reward += statistics.mean(                                                                    #l.notlateness existiert nicht
             #         [l.notlateness(self.instance.current_time) for l in self.instance.active_lots])
@@ -357,7 +352,6 @@ class DynamicSCFabSimulationEnvironment(Env):
                             self.stepbuffer[self.files[rk][i]['ROUTE']][order['LOT']][self.files[rk][i]['STEP']]=[step_start, step_end]
                         else: 
                             continue
-                            print("Error: Step already exists")
                         step_start = step_end + processing_time
 
     def next_step(self):
@@ -371,7 +365,6 @@ class DynamicSCFabSimulationEnvironment(Env):
             if self.station_group is None or \
                     f'[{machine.group}]' in self.station_group or \
                     f'<{machine.family}>' in self.station_group:
-                #print("Entscheidung benötigt")
                 found = True
             else:
                 machine, lots = get_lots_to_dispatch_by_machine(self.instance, machine=machine,
