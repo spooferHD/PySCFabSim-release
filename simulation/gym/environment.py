@@ -18,6 +18,8 @@ from E import E
 from randomizer import Randomizer
 from read import read_all
 from sample_envs import DEMO_ENV_1
+import datetime
+import copy
 
 r = Randomizer()
 
@@ -53,7 +55,8 @@ class DynamicSCFabSimulationEnvironment(Env):
         self.reward_type = reward_type
         self.mavg = 0
         self.state_components = state_components
-        self.plugins = plugins  
+        self.stepbuffer={}  
+        self.greedy_instance = copy.deepcopy(greedy_instance)
         self.reset()
 
     def seed(self, seed=None):
@@ -74,7 +77,10 @@ class DynamicSCFabSimulationEnvironment(Env):
             lots = lot_group[:min(len(lot_group), lot.actual_step.batch_max)]
             violated_minruns = self._machine.min_runs_left is not None and self._machine.min_runs_setup == lot.actual_step.setup_needed
             self.instance.dispatch(self._machine, lots)
-            done = self.next_step() or self.max_steps < self.actual_step
+            if self.max_steps == 0:
+                done = self.next_step() or self.instance.current_time > 3600 * 24 * self.days
+            else:
+                done = self.next_step() or self.max_steps < self.actual_step
             reward = 0
             if self.reward_type in [1, 2]:
                 for i in range(self.lots_done, len(self.instance.done_lots)):
@@ -281,11 +287,16 @@ class DynamicSCFabSimulationEnvironment(Env):
         if not self.did_reset:
             self.did_reset = True
             self.actual_step = 0
-            self.lots_done = 0
-            run_to = 3600 * 24 * self.days
-            self.instance = FileInstance(self.files, run_to, True, self.plugins)
+            if self.greedy_instance is not None:
+                self.instance = copy.deepcopy(self.greedy_instance)
+                self.lots_done = len(self.instance.done_lots)
+            else:
+                self.lots_done = 0
+                run_to = 3600 * 24 * self.days
+                self.instance = FileInstance(self.files, run_to, True, self.plugins)
             Randomizer().random.seed(self.seed_val)
             self.seed_val += 1
+            self.step_buffer()
             self.next_step()
         return self.state
     

@@ -12,14 +12,14 @@ from wandb.integration.sb3 import WandbCallback
 
 from simulation.gym.environment import DynamicSCFabSimulationEnvironment
 from stable_baselines3.common.callbacks import CheckpointCallback
-
+from simulation.greedy_RL import run_greedy
 from sys import argv
 
 from simulation.gym.sample_envs import DEMO_ENV_1
 
 
 def main():
-    to_train = 10000000 # 608000 für 730 Tage --> 32 Jahre Trainingszeit (mit Initialisierungsphase)
+    greedy_days = 100
     t = time.time()
 
     class MyCallBack(CheckpointCallback):
@@ -41,6 +41,11 @@ def main():
     args = dict(num_actions=p['action_count'], active_station_group=p['station_group'],
                 days=p['training_period'], dataset='SMT2020_' + p['dataset'],
                 dispatcher=p['dispatcher'])
+    args_eval= dict(num_actions=p['action_count'], active_station_group=p['station_group'], dataset='SMT2020_' + p['dataset'],
+                dispatcher=p['dispatcher'])
+    print(f'Greedy ENV bis {greedy_days} Tage erstellt')
+    greedy_instance =run_greedy('SMT2020_' + p['dataset'],p['training_period'] , greedy_days, p['dispatcher'], 0, False, False, alg='l4m')
+    print("Greedy Instance abgeschlossen")
     print("Args angenommen")
     env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'], plugins=[])
     print("Env erstellt")
