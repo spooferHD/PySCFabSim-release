@@ -39,8 +39,7 @@ class Instance:
         self.active_lots: List[Lot] = []
         self.done_lots: List[Lot] = []
 
-        self.events = EventQueue()
-        #self.pmsbd = defaultdict(lambda: {'PM_count':0,'PM_in_std': 0 ,'BD_count':0, 'BD_in_std': 0})        
+        self.events = EventQueue()       
 
         self.current_time = 0
 
@@ -82,17 +81,7 @@ class Instance:
         process_until = self.process_until_calc()
         while len(self.events.arr) > 0 and self.events.first.timestamp <= process_until:
             ev = self.events.pop_first()
-            # if "BreakdownEvent" in str(ev) and ev.is_breakdown != True:
-            #     if len(ev.machine.events) == 0:
-            #         self.current_time = max(0, ev.timestamp, self.current_time)
-            #         # print(f'Time stamp {self.current_time}')
-            #         ev.handle(self)
-            #     else: 
-            #         self.move_event(ev)
-            #         process_until = self.process_until_calc()
-            # else:
             self.current_time = max(0, ev.timestamp, self.current_time)
-            # print(f'Time stamp {self.current_time}')
             ev.handle(self)
         ReleaseEvent.handle(self, process_until)
 
@@ -122,7 +111,6 @@ class Instance:
                     lot.remaining_steps = removed + lot.remaining_steps
                 lot.actual_step, lot.remaining_steps = lot.remaining_steps[0], lot.remaining_steps[1:]
                 if lot.actual_step.has_to_perform():
-                    # print(f'Lot {lot.idx} step {len(lot.processed_steps)} / {len(lot.remaining_steps)}')
                     self.dm.free_up_lots(self, lot)
                     step_found = True
                     for plugin in self.plugins:
@@ -132,7 +120,6 @@ class Instance:
                 assert len(lot.remaining_steps) == 0
                 lot.actual_step = None
                 lot.done_at = self.current_time
-                # print(f'Lot {lot.idx} is done {len(self.active_lots)} {len(self.done_lots)} {self.current_time_days}')
                 self.active_lots.remove(lot)
                 self.done_lots.append(lot)
                 for plugin in self.plugins:
@@ -246,7 +233,6 @@ class Instance:
         self.dm.reserve(self, lots, machine)
 
     def add_event(self, to_insert):
-        # insert event to the correct place in the array
         self.events.ordered_insert(to_insert)
 
     def next_decision_point(self):
