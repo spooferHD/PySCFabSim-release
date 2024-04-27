@@ -88,10 +88,183 @@ class DynamicSCFabSimulationEnvironment(Env):
             elif self.reward_type == 3:
                 reward += statistics.mean(
                     [min(1, j.cr(self.instance.current_time) - 1) for j in self.instance.active_lots])
+            # Diplomarbeit: William Rodmann
+            elif self.reward_type == 4:
+                 #Flow-Faktor
+                part_1 = 0
+                if self.instance.current_time_days >= 100:
+                    for i in range(self.lots_done, len(self.instance.done_lots)): # auf die letzten 30 Tage beschränken 
+                        lot = self.instance.done_lots[i]
+                        if lot.done_at >= self.instance.current_time - (3600 * 24 * 60):
+                            CT = lot.done_at - lot.release_at
+                            RPT = lot.processing_time
+                            flow_factor =  CT/RPT
+                            part_1 -= (flow_factor-1)*lot.priority
+                #Zeitlicher Puffer für den aktuellen Routenschritt
+                part_2 = 0
+                for j in self.instance.active_lots:
+                    if j.actual_step.family not in self.station_group:
+                         continue
+                    else:
+                        part_2_1 = 0
+                        for route in self.stepbuffer:
+                            nummer_aus_part = ''.join(filter(str.isdigit, j.part_name))
+                            if nummer_aus_part in route:
+                                step_start = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][0]
+                                step_end = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][1]
+                                if self.instance.current_time <= step_end:
+                                    part_2_1 += 100
+                                if self.instance.current_time <= step_start:
+                                    part_2_1 += 100
+                                else:
+                                    part_2_1 -= min(50, (self.instance.current_time - step_end) / 3600)
+                                part_2_1 = part_2_1*j.priority/10
+                            else:
+                                continue
+                            part_2 += part_2_1
+                #Fertigstellung der Lose    
+                part_3 = 0
+                if self.instance.current_time_days >= 100:
+                    for i in range(self.lots_done, len(self.instance.done_lots)):
+                        lot = self.instance.done_lots[i]
+                        if lot.done_at >= self.instance.current_time - (3600 * 24 * 60):
+                            part_3 += 1000 if lot.deadline_at >= lot.done_at else -min(50, (
+                                    lot.done_at - lot.deadline_at) / 3600)
+                            part_3 = part_2 / lot.priority/10
+                #Warteschlangen der Maschinen
+                part_4 = 0
+                for tool in self.instance.machines:  
+                    if tool.group == 'Delay_32':
+                        continue
+                    elif tool.group == 'Diffusion' and len(tool.events) == 0 and len(tool.waiting_lots) >= 6 * 5: #TODO: Woher den Faktor?
+                        part_4 -= 10
+                    elif len(tool.events) == 0 and len(tool.waiting_lots) >= 6:
+                        part_4-= 10
+                reward = 10*part_1 + 0.01*part_2 + 1*part_3 + 0.1*part_4
+            elif self.reward_type == 5:
+                #Flow-Faktor
+                part_1 = 0
+                if self.instance.current_time_days >= 100:
+                    for i in range(self.lots_done, len(self.instance.done_lots)):
+                        lot = self.instance.done_lots[i]
+                        if lot.done_at >= self.instance.current_time - (3600 * 24 * 30):
+                            CT = lot.done_at - lot.release_at
+                            RPT = lot.processing_time
+                            flow_factor =  CT/RPT
+                            part_1 -= (flow_factor-1)*lot.priority
+                #Buffer pro Schritt
+                part_2 = 0
+                for j in self.instance.active_lots:
+                    if j.actual_step.family not in self.station_group:
+                         continue
+                    else:
+                        part_2_1 = 0
+                        for route in self.stepbuffer:
+                            nummer_aus_part = ''.join(filter(str.isdigit, j.part_name))
+                            if nummer_aus_part in route:
+                                step_start = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][0]
+                                step_end = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][1]
+                                if self.instance.current_time <= step_end:
+                                    part_2_1 += 100
+                                if self.instance.current_time <= step_start:
+                                    part_2_1 += 100
+                                else:
+                                    part_2_1 -= min(50, (self.instance.current_time - step_end) / 3600)
+                                part_2_1 = part_2_1*j.priority/10
+                            else:
+                                continue
+                            part_2 += part_2_1
+                #Fertigstellung            
+                part_3 = 0
+                if self.instance.current_time_days >= 100:
+                    for i in range(self.lots_done, len(self.instance.done_lots)):
+                        lot = self.instance.done_lots[i]
+                        if lot.done_at >= self.instance.current_time - (3600 * 24 * 30):
+                            part_3 += 1000
+                            part_3 += 1000 if lot.deadline_at >= lot.done_at else -min(500, (
+                                    lot.done_at - lot.deadline_at) / 3600)
+                            part_3 = part_2 / lot.priority/10
+                reward = 1*part_1 + 0.1*part_2 + 1*part_3
+            elif self.reward_type == 6:
+                #Fertigstellung            
+                part_1 = 0
+                if self.instance.current_time_days >= 100:
+                    for i in range(self.lots_done, len(self.instance.done_lots)):
+                        lot = self.instance.done_lots[i]
+                        if lot.done_at >= self.instance.current_time - (3600 * 24 * 30):
+                            part_1 += 1000
+                            part_1 += 1000 if lot.deadline_at >= lot.done_at else -min(500, (
+                                    lot.done_at - lot.deadline_at) / 3600)
+                            part_1 = part_2 / lot.priority/10
+                #Buffer pro Schritt
+                part_2 = 0
+                for j in self.instance.active_lots:
+                    if j.actual_step.family not in self.station_group:
+                         continue
+                    else:
+                        part_2_1 = 0
+                        for route in self.stepbuffer:
+                            nummer_aus_part = ''.join(filter(str.isdigit, j.part_name))
+                            if nummer_aus_part in route:
+                                step_start = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][0]
+                                step_end = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][1]
+                                if self.instance.current_time <= step_end:
+                                    part_2_1 += 100
+                                if self.instance.current_time <= step_start:
+                                    part_2_1 += 100
+                                else:
+                                    part_2_1 -= min(50, (self.instance.current_time - step_end) / 3600)
+                                part_2_1 = part_2_1*j.priority/10
+                            else:
+                                continue
+                            part_2 += part_2_1
+                reward = 1*part_1 + 0.1*part_2
             elif self.reward_type == 10:
-                for i in range(self.lots_done, len(self.instance.done_lots)):
-                    lot = self.instance.done_lots[i]
-                    reward -= ((lot.done_at - lot.release_at) / 3600)*lot.priority/10
+                #Buffer pro Schritt
+                part_1 = 0
+                for j in self.instance.active_lots:
+                    if j.actual_step.family != self.station_group:
+                         continue
+                    else:
+                        part_1_1 = 0
+                        for route in self.stepbuffer:
+                            nummer_aus_part = ''.join(filter(str.isdigit, j.part_name))
+                            if nummer_aus_part in route:
+                                step_start = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][0]
+                                step_end = j.release_at+self.stepbuffer[route][j.name][j.actual_step.order][1]
+                                if self.instance.current_time <= step_end:
+                                    part_1_1 += 10
+                                elif self.instance.current_time <= step_start:
+                                    part_1_1 += 10
+                                else:
+                                    part_1_1 -= min(50, (self.instance.current_time - step_end) / 3600)
+                                part_1_1 = part_1_1*j.priority/10
+                            else:
+                                continue
+                            part_1 += part_1_1
+                #Fertigstellung
+                part_2 = 0
+                if self.instance.current_time_days >= 100:
+                    for i in range(self.lots_done, len(self.instance.done_lots)):
+                        lot = self.instance.done_lots[i]
+                        reward += 1000
+                        if lot.done_at <= self.instance.current_time - (3600 * 24 * 60):
+                            part_2 += 100 if lot.deadline_at >= lot.done_at else -min(500, (
+                                    lot.done_at - lot.deadline_at) / 3600)
+                            part_2 = part_2 / lot.priority/10
+                #Warteschlange der Maschinen
+                part_3 = 0
+                for tool in self.instance.machines:  
+                    if tool.group == 'Delay_32':
+                        continue
+                    elif tool.group == 'Diffusion' and len(tool.events) == 0 and len(tool.waiting_lots) >= 6 * 5: #TODO: Woher den Faktor?
+                        part_3 -= 10
+                    elif len(tool.events) == 0 and len(tool.waiting_lots) >= 6:
+                        part_3 -= 10
+                reward = 1*part_1 + 1*part_2 + 1*part_3
+           
+            
+            
             # elif self.reward_type == 7:
             #     reward += statistics.mean(                                                                    #l.notlateness existiert nicht
             #         [l.notlateness(self.instance.current_time) for l in self.instance.active_lots])
@@ -115,6 +288,61 @@ class DynamicSCFabSimulationEnvironment(Env):
             self.seed_val += 1
             self.next_step()
         return self.state
+    
+    def date_time_parse(st):
+        return datetime.datetime.strptime(st, '%m/%d/%y %H:%M:%S')
+    
+    def process_steps_per_route(self):
+        process_steps = {}
+        route_keys = [key for key in self.files.keys() if 'route' in key]
+        for rk in route_keys:
+            count= 0
+            for step in self.files[rk]:
+                if step['STNFAM'] != 'Delay_32':
+                    count += 1
+            process_steps[rk]=count
+        return process_steps
+    def step_buffer(self):
+        process_steps_per_route = self.process_steps_per_route()
+        route_keys = [key for key in self.files.keys() if 'route' in key]
+        order_keys = [key for key in self.files.keys() if 'order' in key]
+        parts = {p['PART']: p['ROUTEFILE'] for p in self.files['part.txt']}
+        transport_time = self.files['fromto.txt'][0]['DTIME']
+        for value in parts:
+            for rk in route_keys:
+                step_number = process_steps_per_route[rk]
+                for order in self.files[order_keys[0]]:
+                    if order['PART'] != value or rk != parts[value]:
+                        continue
+                    diff = (datetime.datetime.strptime(order['DUE'], '%m/%d/%y %H:%M:%S') - datetime.datetime.strptime(order['START'], '%m/%d/%y %H:%M:%S'))
+                    relative_deadline = diff.total_seconds()
+                    Load_and_Unload_time = 2*60 # 2min in sec
+                    step_buffer = relative_deadline/step_number - Load_and_Unload_time - transport_time
+                    step_start = 0
+                    step_end = 0
+                    step_counter = 0
+                    for i in range(len(self.files[rk])):
+                        if self.files[rk][i]['PTPER']== 'per_piece':
+                            processing_time = self.files[rk][i]['PTIME']*60*25
+                        elif self.files[rk][i]['PTPER'] == 'per_batch':
+                            processing_time = self.files[rk][i]['PTIME']*(self.files[rk][i]['BATCHMX'] / 25)*60
+                        else:
+                            processing_time = self.files[rk][i]['PTIME']*60 
+                        if self.files[rk][i]['STNFAM'] == 'Delay_32':
+                            step_end += 0
+                        else:
+                            step_end += step_buffer
+                            step_counter += 1
+                        if self.files[rk][i]['ROUTE'] not in self.stepbuffer:
+                            self.stepbuffer[self.files[rk][i]['ROUTE']] = {}
+                        if order['LOT'] not in self.stepbuffer[self.files[rk][i]['ROUTE']]:
+                            self.stepbuffer[self.files[rk][i]['ROUTE']][order['LOT']] = {}
+                        if self.files[rk][i]['STEP'] not in self.stepbuffer[self.files[rk][i]['ROUTE']][order['LOT']]:
+                            self.stepbuffer[self.files[rk][i]['ROUTE']][order['LOT']][self.files[rk][i]['STEP']]=[step_start, step_end]
+                        else: 
+                            continue
+                            print("Error: Step already exists")
+                        step_start = step_end + processing_time
 
     def next_step(self):
         found = False
