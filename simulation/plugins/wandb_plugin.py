@@ -39,6 +39,8 @@ class WandBPlugin(IPlugin):
         self.wandb_resetups = 0
         self.wandb_setup_machines = set()
         self.wandb_cqt_violations  = 0
+        self.wandb_step_reward= 0   
+        self.wandb_overall_reward = 0
 
     def on_sim_done(self, instance):
         self.step(instance, force=True)
@@ -103,11 +105,17 @@ class WandBPlugin(IPlugin):
             self.wandb_batch_util.append(len(lots) / lots[0].actual_step.batch_max)
         self.step(instance)
 
+    def on_step_reward(self, reward):
+        self.wandb_step_reward = reward
+        self.wandb_overall_reward += reward
+
     def step(self, instance, force=False):
         if self.wandb_step_count % WANDB_LOG_INTERVAL == 0 or force:
             now_done = len(instance.done_lots) - self.wandb_lots_already_done
             elapsed_time = instance.current_time_days - self.wandb_time_done
             wandb.log({
+                'reward/overall': self.wandb_overall_reward,
+                'reward/step': self.wandb_step_reward,
                 'lots/wip': len(instance.active_lots),
                 'lots/done': len(instance.done_lots),
                 'machines/free': meanor0(self.wandb_machine_free_count),
