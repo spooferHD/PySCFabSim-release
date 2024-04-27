@@ -47,9 +47,9 @@ def main():
     greedy_instance =run_greedy('SMT2020_' + p['dataset'],p['training_period'] , greedy_days, p['dispatcher'], 0, False, False, alg='l4m')
     print("Greedy Instance abgeschlossen")
     print("Args angenommen")
-    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'], plugins=[])
+    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'],greedy_instance=greedy_instance, plugins=[] )
     print("Env erstellt")
-    #eval_env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=777, max_steps=10000, reward_type=p['reward'])
+    eval_env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args_eval, days= 265, seed=777, max_steps=0, reward_type=p['reward'], greedy_instance=greedy_instance,plugins=[])
     print("Alles erstellt - ich lerne jz")
     model = PPO("MlpPolicy", env, verbose=1)
 

@@ -36,7 +36,7 @@ STATE_COMPONENTS_DEMO = (
 class DynamicSCFabSimulationEnvironment(Env):
 
     def __init__(self, num_actions, active_station_group, days, dataset, dispatcher, seed, max_steps,
-                 reward_type, action, state_components, plugins=None):
+                 reward_type, action, state_components, greedy_instance,plugins=None, ):
         self.did_reset = False
         self.files = read_all('datasets/' + dataset)
         self.instance = None
@@ -55,6 +55,7 @@ class DynamicSCFabSimulationEnvironment(Env):
         self.reward_type = reward_type
         self.mavg = 0
         self.state_components = state_components
+        self.plugins = plugins
         self.stepbuffer={}  
         self.greedy_instance = copy.deepcopy(greedy_instance)
         self.reset()
@@ -279,8 +280,12 @@ class DynamicSCFabSimulationEnvironment(Env):
             if violated_minruns:
                 reward += -10
             self.lots_done = len(self.instance.done_lots)
+            for plugin in self.plugins:
+                plugin.on_step_reward(reward)
             return self.state, reward, done, {}
         else:
+            for plugin in self.plugins:
+                plugin.on_step_reward(-100)
             return self.state, -100, self.max_steps < self.actual_step, {}
 
     def reset(self):

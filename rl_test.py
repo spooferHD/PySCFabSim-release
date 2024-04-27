@@ -34,9 +34,9 @@ def main():
     
     plugins = []
     if wandb:
-        from plugins.wandb_plugin import WandBPlugin
+        from simulation.plugins.wandb_plugin import WandBPlugin
         plugins.append(WandBPlugin())
-    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, max_steps=1000000000, plugins=[])
+    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, max_steps=1000000000, plugins=plugins, greedy_instance=None)
     obs = env.reset()
     #print("obs", obs)
     reward = 0
