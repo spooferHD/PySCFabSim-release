@@ -8,7 +8,8 @@ logs/
 differences.json
 Vergleich.py
 Test.py
-.json
-*.txt
+*.json
 experiments/
+*.xlsx
+*.pkl
 ```
