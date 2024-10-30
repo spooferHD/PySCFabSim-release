@@ -19,3 +19,4 @@ HotLot_7	part_7	20	25	01/01/18 00:00:00	constant	10080	min	20000	1	01/25/18 00:4
 HotLot_8	part_8	20	25	01/01/18 00:00:00	constant	10080	min	20000	1	01/26/18 09:57:25	O_HotLot_8	no
 HotLot_9	part_9	20	25	01/01/18 00:00:00	constant	10080	min	20000	1	01/27/18 18:09:27	O_HotLot_9	no
 HotLot_10	part_10	20	25	01/01/18 00:00:00	constant	10080	min	20000	1	01/28/18 18:30:14	O_HotLot_10	no
+SuperHotLot_3	part_3	30	25	01/01/18 00:00:00	constant	28258.37	min	2000	1	02/08/18 07:05:01	O_SuperHotLot_3	no
