@@ -139,7 +139,9 @@ def run_greedy():
     p.add_argument('--wandb', action='store_true', default=False)
     p.add_argument('--chart', action='store_true', default=False)
     p.add_argument('--alg', type=str, default='l4m', choices=['l4m', 'm4l'])
+    p.add_argument('--WIP', type=bool, default=True)
     a = p.parse_args()
+    a.WIP = False
 
     
     sys.stderr.write('Loading ' + a.dataset + ' for ' + str(a.days) + ' days, using ' + a.dispatcher + '\n')
@@ -148,7 +150,8 @@ def run_greedy():
     start_time = datetime.now()
 
     files = read_all('datasets/' + a.dataset)
-
+    if a.WIP == False:
+        files['WIP.txt'] = files['WIPempty.txt']
     run_to = 3600 * 24 * a.days
     Randomizer().random.seed(a.seed)
     l4m = a.alg == 'l4m'

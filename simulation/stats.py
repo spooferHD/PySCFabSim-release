@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from classes import Lot, Step
 
 
-def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy'):
+def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy', wip = False):
     from instance import Instance
     instance: Instance
     lot: Lot
@@ -20,7 +20,21 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
     lot_list={}
     for lot in instance.done_lots:
         lots[lot.name]['throughput'] += 1
-        if lot.release_at >= 31536000:
+        if wip == False and lot.release_at >= 31536000:
+            lots[lot.name]['throughput_one_year'] += 1
+            lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
+            lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
+            lots[lot.name]['early_tardiness'] += max(0, lot.deadline_at - lot.done_at)
+            lots[lot.name]['waiting_time'] += lot.waiting_time
+            lots[lot.name]['waiting_time_batching'] += lot.waiting_time_batching
+            lots[lot.name]['processing_time'] += lot.processing_time
+            lots[lot.name]['transport_time'] += lot.transport_time
+            if lot.done_at <= lot.deadline_at:
+                lots[lot.name]['on_time'] += 1
+            if lot.name not in apt:
+                apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
+                dl[lot.name] = lot.deadline_at - lot.release_at
+        else:
             lots[lot.name]['throughput_one_year'] += 1
             lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
             lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
@@ -67,15 +81,16 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
         pm_times[machine.family].append(machine.pmed_time)
         br_times[machine.family].append(machine.bred_time)
 
-    print('Machine', 'Cnt', 'avail' 'util', 'br', 'pm', 'setup')
+    print('Machine', 'Cnt', 'avail','util', 'br', 'pm', 'setup')
     machines = defaultdict(lambda: {})
     for machine_name in sorted(list(utilized_times.keys())):
-        av = (instance.current_time - statistics.mean(pm_times[machine_name]) - statistics.mean(br_times[machine_name]))
-        machines[machine_name]['avail'] = av / instance.current_time
+        time = instance.current_time - 31536000 #if not wip else instance.current_time
+        av = (time - statistics.mean(pm_times[machine_name]) - statistics.mean(br_times[machine_name]))
+        machines[machine_name]['avail'] = av / time
         machines[machine_name]['util'] = statistics.mean(utilized_times[machine_name]) / av
-        machines[machine_name]['pm'] = statistics.mean(pm_times[machine_name]) / instance.current_time
-        machines[machine_name]['br'] = statistics.mean(br_times[machine_name]) / instance.current_time
-        machines[machine_name]['setup'] = statistics.mean(setup_times[machine_name]) / instance.current_time
+        machines[machine_name]['pm'] = statistics.mean(pm_times[machine_name]) / time
+        machines[machine_name]['br'] = statistics.mean(br_times[machine_name]) / time
+        machines[machine_name]['setup'] = statistics.mean(setup_times[machine_name]) / time
         r = instance.lot_waiting_at_machine[machine_name]
         machines[machine_name]['waiting_time'] = r[1] / r[0] / 3600 / 24
         print(machine_name, len(utilized_times[machine_name]),
