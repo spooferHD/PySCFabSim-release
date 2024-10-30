@@ -134,10 +134,13 @@ class Step:
         return r.random.uniform(0, 100) <= self.sampling_percent
 
     def has_to_rework(self, lot_id):
-        if self.rework_percent == 0 or lot_id in self.reworked:
+        if self.rework_percent == 0: 
             return False
-        self.reworked[lot_id] = True
-        return r.random.uniform(0, 100) <= self.rework_percent
+        if r.random.uniform(0, 100) <= self.rework_percent: 
+            self.reworked[lot_id] = True
+            return True
+        return False 
+        #return r.random.uniform(0, 100) <= self.rework_percent 
 
 
 class Lot:

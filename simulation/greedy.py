@@ -188,7 +188,7 @@ def run_greedy():
                 instance.next_step()
             else:
                 instance.dispatch(machine, lots)
-
+    instance.rework_proofed()
     instance.finalize()
     interval = datetime.now() - start_time
     print(instance.current_time_days, ' days simulated in ', interval)

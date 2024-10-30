@@ -157,6 +157,7 @@ class Instance:
                 machine_time += s
                 machine.pieces_until_maintenance[i] = machine.piece_per_maintenance[i]
                 machine.pmed_time += s
+                machine.current_setup = ''
         # compute timebased preventive maintenance requirement
         look_ahead_time = self.current_time + machine_time + setup_time
         for event in self.events.arr:
@@ -264,3 +265,19 @@ class Instance:
                 sys.stderr.write(
                     f'\rDay {self.printed_days}===Throughput: {round(len(self.done_lots) / self.printed_days)}/day=')
                 sys.stderr.flush()
+    def rework_proofed(self):
+        route_3_rwork_in_percent = []
+        route_4_rwork_in_percent = []
+        for route in self.routes:
+            for step in self.routes[route].steps:
+                if step.rework_step != 0 and route == 'route_3.txt':
+                    route_3_rwork_in_percent.append([step.idx, len(step.reworked)])
+                elif step.rework_step != 0 and route == 'route_4.txt':
+                    route_4_rwork_in_percent.append([step.idx, len(step.reworked)])
+                elif step.rework_step == 0 and route == 'route_3.txt':
+                    route_3_rwork_in_percent.append([step.idx, 0])
+                elif step.rework_step == 0 and route == 'route_4.txt':
+                    route_4_rwork_in_percent.append([step.idx, 0])
+        with open('rework_table.pkl', 'wb') as f:
+            pickle.dump(route_3_rwork_in_percent, f)
+            pickle.dump(route_4_rwork_in_percent, f)
