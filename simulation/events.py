@@ -39,8 +39,20 @@ class ReleaseEvent:
             return True
         else:
             return False
-
-
+        
+class ResetEvent:
+    
+        def __init__(self, timestamp):
+            self.timestamp = timestamp
+        
+        def handle(self, instance):
+            print("Reset Event handled")
+            for machine in instance.machines:
+                machine.utilized_time = 0  
+                machine.setuped_time = 0
+                machine.pmed_time = 0
+                machine.bred_time = 0
+        
 class BreakdownEvent:
 
     def __init__(self, timestamp, length, repeat_interval, machine, is_breakdown, unaffected_timestamp=0):

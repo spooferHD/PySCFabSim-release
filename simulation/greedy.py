@@ -13,7 +13,7 @@ from plugins.cost_plugin import CostPlugin
 from randomizer import Randomizer
 from read import read_all
 from stats import print_statistics
-import copy
+from events import ResetEvent
 
 import argparse
 import pandas as pd
@@ -161,6 +161,8 @@ def run_greedy():
         plugins.append(ChartPlugin())
     plugins.append(CostPlugin())
     instance = FileInstance(files, run_to, l4m, plugins)
+    if a.WIP ==False or a.days > 365:
+        instance.add_event(ResetEvent(31536000))
 
     dispatcher = dispatcher_map[a.dispatcher]
 
