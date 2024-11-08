@@ -140,6 +140,7 @@ class Instance:
                 lot.waiting_time_batching += self.current_time - lot.free_since
             if lot.actual_step.cqt_for_step is not None:
                 lot.cqt_waiting = lot.actual_step.cqt_for_step
+                #lot.cqt_deadline = self.current_time + lot.actual_step.cqt_time
                 lot.cqt_deadline = lot.actual_step.cqt_time
             if lot.actual_step.order == lot.cqt_waiting:
                 if lot.cqt_deadline < self.current_time:

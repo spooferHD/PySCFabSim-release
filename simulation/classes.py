@@ -118,6 +118,8 @@ class Step:
         self.sampling_percent = 100 if d['StepPercent'] in ['', None] else float(d['StepPercent'])
         self.rework_percent = 0 if d['REWORK'] in ['', None] else float(d['REWORK'])
         
+        
+        #self.cqt_for_step = None if d['STEP_CQT']=='' else d['STEP_CQT']
         self.cqt_for_step = d['STEP_CQT'] if 'STEP_CQT' in d else None
         self.cqt_time = get_interval(d['CQT'], d['CQTUNITS']) if self.cqt_for_step is not None else None
 
