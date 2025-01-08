@@ -83,8 +83,9 @@ class Product:
 
 class Step:
 
-    def __init__(self, idx, pieces_per_lot, d):
+    def __init__(self, idx, pieces_per_lot, d, rpt_mode):
         self.idx = idx
+        self.rpt_mode = rpt_mode
         self.order = d['STEP']
         self.step_name = d['DESC']
         self.family = d['STNFAM']
@@ -113,7 +114,10 @@ class Step:
             else:
                 self.cascading_time = self.processing_time
         self.batching = d['PTPER'] == 'per_batch'
-        self.batch_min = 1 if d['BATCHMN'] == '' else int(d['BATCHMN'] / pieces_per_lot)
+        if self.rpt_mode:
+            self.batch_min = 1 if d['BATCHMN'] == '' else 1
+        else:
+            self.batch_min = 1 if d['BATCHMN'] == '' else int(d['BATCHMN'] / pieces_per_lot)
         self.batch_max = 1 if d['BATCHMX'] == '' else int(d['BATCHMX'] / pieces_per_lot)
         self.sampling_percent = 100 if d['StepPercent'] in ['', None] else float(d['StepPercent'])
         self.rework_percent = 0 if d['REWORK'] in ['', None] else float(d['REWORK'])
@@ -224,6 +228,6 @@ class Route:
 
 class FileRoute(Route):
 
-    def __init__(self, idx, pieces_per_lot, steps: List[Dict]):
-        steps = [Step(i, pieces_per_lot, d) for i, d in enumerate(steps)]
+    def __init__(self, idx, pieces_per_lot, steps: List[Dict], rpt_mode):
+        steps = [Step(i, pieces_per_lot, d, rpt_mode) for i, d in enumerate(steps)]
         super().__init__(idx, steps)

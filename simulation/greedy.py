@@ -14,12 +14,14 @@ from randomizer import Randomizer
 from read import read_all
 from stats import print_statistics
 from events import ResetEvent
+import random
 
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
 last_sort_time = -1
+round_robin = False
 
 
 def dispatching_combined_permachine(ptuple_fcn, machine, time, setups):
@@ -37,7 +39,23 @@ def find_alternative_machine(instance, lots, machine):
             break
     return machine
 
+def max_batch(lots):     
+    if len(lots) > lots[0].actual_step.batch_max:
+        lots = lots[:lots[0].actual_step.batch_max]
+    if len(lots) < lots[0].actual_step.batch_max:
+        lots = None
+    return lots
+
+def min_batch(lots):   
+    if len(lots) < lots[0].actual_step.batch_min:
+        lots = None
+    elif len(lots) > lots[0].actual_step.batch_min:
+        lots = lots[:lots[0].actual_step.batch_min]
+    return lots
+
+
 def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
+    global round_robin	
     time = instance.current_time
     if machine is None:
         for machine in instance.usable_machines:
@@ -60,10 +78,19 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
                            *(l[0].ptuple[2:]),  # finally, order based on prescribed priority rule
                        ))
         lots: List[Lot] = lot_l[0]
-        if len(lots) > lots[0].actual_step.batch_max:
-            lots = lots[:lots[0].actual_step.batch_max]
-        if len(lots) < lots[0].actual_step.batch_max:
-            lots = None
+        if instance.rpt_route is not None:
+            if len(lots) >= lots[0].actual_step.batch_min:
+                lots = lots[:lots[0].actual_step.batch_min]
+            if len(lots) > lots[0].actual_step.batch_max:
+                lots = lots[:lots[0].actual_step.batch_max]
+        elif instance.rpt_route is None:
+            if instance.batch_strat == 'Max':        
+                lots = max_batch(lots)
+            if instance.batch_strat == 'Min':
+                lots = min_batch(lots)
+            if instance.batch_strat == 'RoundRobin':
+                lots = max_batch(lots) if not round_robin else min_batch(lots)
+                round_robin = not round_robin
     else:
         # dispatch single lot
         lots = [lot]
@@ -152,6 +179,9 @@ def run_greedy():
     p.add_argument('--chart', action='store_true', default=False)
     p.add_argument('--alg', type=str, default='l4m', choices=['l4m', 'm4l'])
     p.add_argument('--WIP', type=bool, default=True)
+    p.add_argument('--rpt_mode', type=bool, default=None)
+    p.add_argument('--rpt_route', type=str, default=None)
+    p.add_argument('--batch_strat', type=str, default="Max") #Max,Min, RoundRobin
     a = p.parse_args()
     seed = random.randint(1, 10000)
     a.dataset = 'SMT2020_HVLM'
@@ -159,6 +189,24 @@ def run_greedy():
     a.dispatcher = 'fifo'
     a.seed = seed
     a.WIP = False 
+    a.rpt_mode = False
+    #a.rpt_route = 4
+    a.batch_strat = 'RoundRobin'
+    if a.rpt_mode and not None:
+        if a.rpt_route:
+            print('RPT mode is on')
+            a.rpt_route = "part_" + str(a.rpt_route)
+            a.WIP = False 
+            a.days = 730
+        else:
+            print('RPT mode is on, but no route is given')
+            exit()
+    elif a.rpt_route:
+        print('RPT route is given, but RPT mode is off')
+        exit()
+    else:
+        print('RPT mode is off')
+
 
     
     sys.stderr.write('Loading ' + a.dataset + ' for ' + str(a.days) + ' days, using ' + a.dispatcher + '\n')
@@ -171,7 +219,6 @@ def run_greedy():
         files['WIP.txt'] = files['WIPempty.txt']
     run_to = 3600 * 24 * a.days
     seedValue=Randomizer().random.seed(a.seed)
-    print('Seed:', a.seed)
     l4m = a.alg == 'l4m'
     plugins = []
     if a.wandb:
@@ -181,7 +228,7 @@ def run_greedy():
         from plugins.chart_plugin import ChartPlugin
         plugins.append(ChartPlugin())
     plugins.append(CostPlugin())
-    instance = FileInstance(files, run_to, l4m, plugins)
+    instance = FileInstance(files, run_to, l4m, plugins, a.rpt_route, a.batch_strat)
     if (a.WIP ==False or a.days > 365) and a.rpt_mode == False:
         instance.add_event(ResetEvent(31536000))
 

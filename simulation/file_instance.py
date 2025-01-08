@@ -9,9 +9,12 @@ from tools import get_interval, get_distribution, UniformDistribution, date_time
 
 class FileInstance(Instance):
 
-    def __init__(self, files: Dict[str, List[Dict]], run_to, lot_for_machine, plugins):
+    def __init__(self, files: Dict[str, List[Dict]], run_to, lot_for_machine, plugins, rpt_route, batch_strat):
         machines = []
         machine_id = 0
+        self.run_to = run_to    
+        self.rpt_route = rpt_route
+        self.batch_strat = batch_strat  
         r = Randomizer()
         family_locations = {}
         for d_m in files['tool.txt.1l']:
@@ -29,7 +32,10 @@ class FileInstance(Instance):
         routes = {}
         route_keys = [key for key in files.keys() if 'route' in key]
         for rk in route_keys:
-            route = FileRoute(rk, pieces, files[rk])
+            if self.rpt_route:
+                route = FileRoute(rk, pieces, files[rk], True)
+            else:
+                route = FileRoute(rk, pieces, files[rk], False)
             last_loc = None
             for s in route.steps:
                 s.family_location = family_locations[s.family]
@@ -44,20 +50,37 @@ class FileInstance(Instance):
         lots = []
         idx = 0
         lot_pre = {}
-        for order in files['order.txt']:
-            assert pieces == order['PIECES']
-            first_release = 0
-            release_interval = get_interval(order['REPEAT'], order['RUNITS'])
-            relative_deadline = (date_time_parse(order['DUE']) - date_time_parse(order['START'])).total_seconds()
+        if self.rpt_route is None:
+            for order in files['order.txt']:
+                assert pieces == order['PIECES']
+                first_release = 0
+                release_interval = get_interval(order['REPEAT'], order['RUNITS'])
+                relative_deadline = (date_time_parse(order['DUE']) - date_time_parse(order['START'])).total_seconds()
 
-            for i in range(order['RPT#']):
-                rel_time = first_release + i * release_interval
-                lot = Lot(idx, routes[parts[order['PART']]], order['PRIOR'], rel_time, relative_deadline, order)
-                lots.append(lot)
-                lot_pre[lot.name] = relative_deadline
-                idx += 1
-                if rel_time > run_to:
-                    break
+                for i in range(order['RPT#']):
+                    rel_time = first_release + i * release_interval
+                    lot = Lot(idx, routes[parts[order['PART']]], order['PRIOR'], rel_time, relative_deadline, order)
+                    lots.append(lot)
+                    lot_pre[lot.name] = relative_deadline
+                    idx += 1
+                    if rel_time > run_to:
+                        break
+        else:
+            for order in files['order.txt']:
+                if order['PART'] == self.rpt_route and order['PRIOR'] == 10:
+                    assert pieces == order['PIECES']
+                    first_release = 0
+                    release_interval = get_interval(7, "day")
+                    relative_deadline = (date_time_parse(order['DUE']) - date_time_parse(order['START'])).total_seconds()
+                    for i in range(order['RPT#']):
+                        rel_time = first_release + i * release_interval
+                        lot = Lot(idx, routes[parts[order['PART']]], order['PRIOR'], rel_time, relative_deadline, order)
+                        lots.append(lot)
+                        lot_pre[lot.name] = relative_deadline
+                        idx += 1
+                        if rel_time > run_to:
+                            break
+            print(len(lots))           
 
         for wip in files['WIP.txt']:
             assert pieces == wip['PIECES']
@@ -70,7 +93,10 @@ class FileInstance(Instance):
             idx += 1
 
         setups = {(s['CURSETUP'], s['NEWSETUP']): get_interval(s['STIME'], s['STUNITS']) for s in files['setup.txt']}
-        setup_min_run = {s['SETUP']: s['MINRUN'] for s in files['setupgrp.txt']}
+        if self.rpt_route is not None:
+            setup_min_run = {s['SETUP']: 1 for s in files['setupgrp.txt']}
+        else:
+            setup_min_run = {s['SETUP']: s['MINRUN'] for s in files['setupgrp.txt']}
 
         downcals = {}
         for dc in files['downcal.txt']:

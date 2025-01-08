@@ -65,7 +65,10 @@ class Instance:
         process_until = []
         if len(self.events.arr) > 0:
             process_until.append(max(0, self.events.first.timestamp))
-        process_until.append(max(0, self.dispatchable_lots[0].release_at))
+        if len(self.dispatchable_lots) > 0:
+            process_until.append(max(0, self.dispatchable_lots[0].release_at))
+        else: 
+            process_until.append(0)
         return min(process_until)
     
     def move_event(self, ev):

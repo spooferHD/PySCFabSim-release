@@ -5,9 +5,16 @@ import statistics
 from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 from classes import Lot, Step
 
+lot_list = []
+percentile_list = []
+
+def save_percentile(instance):
+    df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
+    df.to_csv('percentil_' + instance.rpt_route + ".csv", index=False)
 
 def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy', wip = False):
     from instance import Instance
@@ -48,6 +55,12 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
             if lot.name not in apt:
                 apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
                 dl[lot.name] = lot.deadline_at - lot.release_at
+            lot_list.append((lot.done_at-lot.release_at)/60/60/24)
+    for i in range(0,11):
+        percentile_list.append(["Percentil "+ str(i*10), np.percentile(lot_list, i*10)])
+    print("RPT - 0%-Percentile:", np.percentile(lot_list, 0))
+    print("RPT - 100%-Percentile:", np.percentile(lot_list, 100))
+    save_percentile(instance)
     print('Lot', 'APT', 'DL', 'ACT', 'TH', 'ONTIME', 'tardiness', 'early_tardiness', 'wa', 'pr', 'tr')
     acts = []
     ths = []
