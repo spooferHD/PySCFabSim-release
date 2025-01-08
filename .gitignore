@@ -12,4 +12,5 @@ Test.py
 experiments/
 *.xlsx
 *.pkl
+*.csv
 ```
