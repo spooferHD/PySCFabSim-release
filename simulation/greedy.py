@@ -153,12 +153,12 @@ def run_greedy():
     p.add_argument('--alg', type=str, default='l4m', choices=['l4m', 'm4l'])
     p.add_argument('--WIP', type=bool, default=True)
     a = p.parse_args()
-
+    seed = random.randint(1, 10000)
     a.dataset = 'SMT2020_HVLM'
     a.days = 730
     a.dispatcher = 'fifo'
-    a.seed = 100 #21991193
-    a.WIP = False
+    a.seed = seed
+    a.WIP = False 
 
     
     sys.stderr.write('Loading ' + a.dataset + ' for ' + str(a.days) + ' days, using ' + a.dispatcher + '\n')
@@ -182,11 +182,12 @@ def run_greedy():
         plugins.append(ChartPlugin())
     plugins.append(CostPlugin())
     instance = FileInstance(files, run_to, l4m, plugins)
-    if a.WIP ==False or a.days > 365:
+    if (a.WIP ==False or a.days > 365) and a.rpt_mode == False:
         instance.add_event(ResetEvent(31536000))
 
     dispatcher = dispatcher_map[a.dispatcher]
 
+    sys.stderr.write('Seed: ' + str(a.seed) + '\n')
     sys.stderr.write('Starting simulation with dispatching rule'+ a.dispatcher +'\n\n')
     sys.stderr.flush()
 
