@@ -140,7 +140,7 @@ class DynamicSCFabSimulationEnvironment(Env):
                 for tool in self.instance.machines:  
                     if tool.group == 'Delay_32':
                         continue
-                    elif tool.group == 'Diffusion' and len(tool.events) == 0 and len(tool.waiting_lots) >= 6 * 5: #TODO: Woher den Faktor?
+                    elif tool.group == 'Diffusion' and len(tool.events) == 0 and len(tool.waiting_lots) >= 6 * 5: 
                         part_4 -= 10
                     elif len(tool.events) == 0 and len(tool.waiting_lots) >= 6:
                         part_4-= 10

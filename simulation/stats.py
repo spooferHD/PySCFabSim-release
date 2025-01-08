@@ -105,7 +105,8 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
         machines[machine_name]['br'] = statistics.mean(br_times[machine_name]) / time
         machines[machine_name]['setup'] = statistics.mean(setup_times[machine_name]) / time
         r = instance.lot_waiting_at_machine[machine_name]
-        machines[machine_name]['waiting_time'] = r[1] / r[0] / 3600 / 24
+        if r[0] > 0 and r[1] > 0:
+            machines[machine_name]['waiting_time'] = r[1] / r[0] / 3600 / 24
         print(machine_name, len(utilized_times[machine_name]),
               round(machines[machine_name]['avail'] * 100, 2),
               round(machines[machine_name]['util'] * 100, 2),

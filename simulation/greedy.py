@@ -105,19 +105,9 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
                     if machine:
                         lot.dedications.pop(d)
                         break
-                    #machine = None
-        #     else:
-        #         find_alternative_machine(instance, lots, machine)
-        # else:
-        #     find_alternative_machine(instance, lots, machine)
         
         elif lot.actual_step.setup_needed != '' and machine.current_setup != lot.actual_step.setup_needed:
-        #elif machine.current_setup != lot.actual_step.setup_needed:
-        #else:
-            #save_machine = machine
             machine = find_alternative_machine(instance, lots, machine)
-            # if machine != save_machine:
-            #     print("Alternative Machine found")
         
             
     if machine.min_runs_left is not None and machine.min_runs_setup != lots[0].actual_step.setup_needed:
