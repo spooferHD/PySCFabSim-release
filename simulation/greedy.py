@@ -54,7 +54,7 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
         lot_l = sorted(list(lot_m.values()),
                        key=lambda l: (
                            l[0].ptuple[0],  # min run setup 
-                           l[0].ptuple[1],  # cqt
+                           #l[0].ptuple[1],  # cqt
                            -min(1, len(l) / l[0].actual_step.batch_max),  # then maximize the batch size
                            0 if len(l) >= l[0].actual_step.batch_min else 1,  # then take min batch size into account
                            *(l[0].ptuple[2:]),  # finally, order based on prescribed priority rule

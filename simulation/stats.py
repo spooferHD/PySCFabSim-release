@@ -17,7 +17,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
                                 'processing_time': 0, 'transport_time': 0, 'waiting_time_batching': 0})
     apt = {}
     dl = {}
-    lot_list={}
+    print("SUM_CQT_VIOLATIONS:", instance.counter_cqt_violated)
     for lot in instance.done_lots:
         lots[lot.name]['throughput'] += 1
         if wip == False and lot.release_at >= 31536000:

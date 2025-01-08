@@ -180,8 +180,8 @@ class Lot:
         self.processing_time = 0
         self.transport_time = 0
 
-        self.cqt_waiting = None
-        self.cqt_deadline = None
+        # self.cqt_waiting = None
+        # self.cqt_deadline = None
 
         self.ft = None
 

@@ -22,7 +22,7 @@ class Dispatchers:
         if machine is not None:
             lot.ptuple = (
                 0 if machine.min_runs_left is None or machine.min_runs_setup == lot.actual_step.setup_needed else 1,
-                0 if lot.cqt_waiting is not None else 1,
+                #0 if lot.cqt_waiting is not None else 1,
                 Dispatchers.get_setup(lot.actual_step.setup_needed, machine, lot.actual_step.setup_time, setups),
                 -lot.priority, lot.free_since, lot.deadline_at,
             )
@@ -35,7 +35,7 @@ class Dispatchers:
         if machine is not None:
             lot.ptuple = (
                 0 if machine.min_runs_left is None or machine.min_runs_setup == lot.actual_step.setup_needed else 1,
-                0 if lot.cqt_waiting is not None else 1,
+                #0 if lot.cqt_waiting is not None else 1,
                 Dispatchers.get_setup(lot.actual_step.setup_needed, machine, lot.actual_step.setup_time, setups),
                 -lot.priority, -lot.free_since, lot.deadline_at,
             )
@@ -48,7 +48,7 @@ class Dispatchers:
         if machine is not None:
             lot.ptuple = (
                 0 if machine.min_runs_left is None or machine.min_runs_setup == lot.actual_step.setup_needed else 1,
-                0 if lot.cqt_waiting is not None else 1,
+                #0 if lot.cqt_waiting is not None else 1,
                 Dispatchers.get_setup(lot.actual_step.setup_needed, machine, lot.actual_step.setup_time, setups),
                 -lot.priority, -lot.free_since, -lot.deadline_at,
             )
@@ -61,7 +61,7 @@ class Dispatchers:
         if machine is not None:
             lot.ptuple = (
                 0 if machine.min_runs_left is None or machine.min_runs_setup == lot.actual_step.setup_needed else 1,
-                0 if lot.cqt_waiting is not None else 1,
+                #0 if lot.cqt_waiting is not None else 1,
                 Dispatchers.get_setup(lot.actual_step.setup_needed, machine, lot.actual_step.setup_time, setups),
                 -lot.priority, lot.cr(time),
             )
@@ -74,7 +74,7 @@ class Dispatchers:
         if machine is not None:
             return (
                 0 if machine.min_runs_left is None or machine.min_runs_setup == lot.actual_step.setup_needed else 1,
-                0 if lot.cqt_waiting is not None else 1,
+                #0 if lot.cqt_waiting is not None else 1,
                 r.random.uniform(0, 99999),
             )
         else:

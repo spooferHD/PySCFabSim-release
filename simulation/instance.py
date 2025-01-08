@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 import os
-import csv
+import sys
 
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation', 'gym'))
@@ -41,7 +41,7 @@ class Instance:
         self.active_lots: List[Lot] = []
         self.done_lots: List[Lot] = []
 
-        self.events = EventQueue()       
+        self.counter_cqt_violated = 0
 
         self.current_time = 0
 
@@ -140,16 +140,16 @@ class Instance:
             lot.waiting_time += self.current_time - lot.free_since
             if lot.actual_step.batch_max > 1:
                 lot.waiting_time_batching += self.current_time - lot.free_since
-            if lot.actual_step.cqt_for_step is not None:
-                lot.cqt_waiting = lot.actual_step.cqt_for_step
-                #lot.cqt_deadline = self.current_time + lot.actual_step.cqt_time
-                lot.cqt_deadline = lot.actual_step.cqt_time
-            if lot.actual_step.order == lot.cqt_waiting:
-                if lot.cqt_deadline < self.current_time:
-                    for plugin in self.plugins:
-                        plugin.on_cqt_violated(self, machine, lot)
-                lot.cqt_waiting = None
-                lot.cqt_deadline = None
+            # if lot.actual_step.cqt_for_step is not None: TODO: CQT handling, Deactivated for now
+            #     lot.cqt_waiting = lot.actual_step.cqt_for_step
+            #     #lot.cqt_deadline = self.current_time + lot.actual_step.cqt_time
+            #     lot.cqt_deadline = lot.actual_step.cqt_time
+            # if lot.actual_step.order == lot.cqt_waiting:
+            #     if lot.cqt_deadline < self.current_time:
+            #         for plugin in self.plugins:
+            #             plugin.on_cqt_violated(self, machine, lot)
+            #     lot.cqt_waiting = None
+            #     lot.cqt_deadline = None
         # compute times for lot and machine
         lot_time, machine_time, setup_time = self.get_times(self.setups, lots, machine)
         # compute per-piece preventive maintenance requirement
