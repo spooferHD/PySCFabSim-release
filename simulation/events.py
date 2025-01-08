@@ -55,7 +55,7 @@ class ResetEvent:
         
 class BreakdownEvent:
 
-    def __init__(self, timestamp, length, repeat_interval, machine, is_breakdown, unaffected_timestamp=0):
+    def __init__(self, timestamp, length, repeat_interval, machine, is_breakdown, br_name, unaffected_timestamp=0 ):
         self.timestamp = timestamp
         self.machine = machine
         self.machines = []
@@ -66,15 +66,19 @@ class BreakdownEvent:
         if not is_breakdown:
             machine.next_preventive_maintenance = timestamp
         self.unaffected_timestamp = unaffected_timestamp
+        self.br_name = br_name
 
     def handle(self, instance):
         length = self.length.sample()
+        self.machine.current_setup = ''
         if self.is_breakdown:
             self.machine.bred_time += length
+            #instance.List_BD_MaschineID.append([self.machine.idx, self.machine.family, self.timestamp, self.timestamp + length, self.br_name])
           #  instance.pmsbd[self.machine.idx]['BD_count'] += 1
            # instance.pmsbd[self.machine.idx]['BD_in_std'] += length / 60 /60
         else:
             self.machine.pmed_time += length
+            #instance.List_PM_MaschineID.append([self.machine.idx, self.machine.family, self.timestamp, self.timestamp + length, self.br_name])
            # instance.pmsbd[self.machine.idx]['PM_count'] += 1
           #  instance.pmsbd[self.machine.idx]['PM_in_std'] += length / 60 /60
         
@@ -96,32 +100,52 @@ class BreakdownEvent:
             self.repeat_interval,
             self.machine,
             self.is_breakdown,
-            0
+            self.br_name,
+            self.unaffected_timestamp + self.repeat_interval.sample()
         ))
         else:
-                #hier von der geplanten Zeit ausgehen, nicht von der Verschiebung
+                #hier von der geplanten Zeit ausgehend, nicht von der Verschiebung
                 new_timestamp = self.unaffected_timestamp + self.repeat_interval.sample()
                 instance.add_event(BreakdownEvent(
-                    new_timestamp, # Autosced DOKU! -> In der MTBPM Zeit ist die Dauer des PMs enthalten 
+                    new_timestamp, # Autosced DOKU! -> In der MTBPM Zeit ist die Dauer des PMs enthalten
                     self.length,
                     self.repeat_interval,
                     self.machine,
                     self.is_breakdown,
+                    self.br_name,
                     new_timestamp
                 ))
-    
+
 
     def handle_timebased_pm(self, instance):
         time = self.length.sample()
         self.machine.pmed_time += time
 
         new_timestamp = self.unaffected_timestamp + self.repeat_interval.sample()
+
+        # for ev in instance.events.arr:
+        #     if ev.timestamp >= instance.current_time and ev.timestamp <= self.timestamp + time:
+        #         if isinstance(ev, BreakdownEvent) and ev.machine == self.machine and ev.is_breakdown == True:
+        #             instance.events.remove(ev)
+        #             instance.new_br = ev
         instance.add_event(BreakdownEvent(
-            new_timestamp, # Autosced DOKU! -> In der MTBPM Zeit ist die Dauer des PMs enthalten 
+            new_timestamp, # Autosced DOKU! -> In der MTBPM Zeit ist die Dauer des PMs enthalten
             self.length,
             self.repeat_interval,
             self.machine,
             self.is_breakdown,
+            self.br_name,
             new_timestamp
         ))
+        # if instance.new_br is not None:  
+        #     instance.add_event(BreakdownEvent(
+        #         new_timestamp + instance.new_br.repeat_interval.sample(),
+        #         instance.new_br.length,
+        #         instance.new_br.repeat_interval,
+        #         self.machine,
+        #         instance.new_br.is_breakdown,
+        #         instance.new_br.br_name,
+        #         0
+        #     ))
+        #     instance.new_br = None
         return time

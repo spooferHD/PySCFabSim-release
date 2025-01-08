@@ -44,6 +44,7 @@ class Instance:
         self.counter_cqt_violated = 0
 
         self.current_time = 0
+        self.new_br = None   
 
         for plugin in self.plugins:
             plugin.on_sim_init(self)
