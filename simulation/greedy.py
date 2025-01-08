@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append(os.path.join('data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation'))
+#sys.path.append(os.path.join(os.path.sep, 'data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation'))
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
 from collections import defaultdict
 from datetime import datetime

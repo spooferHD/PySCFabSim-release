@@ -36,7 +36,7 @@ def main():
             return super().on_step()
 
     #fn = argv[1]
-    fn = "experiments/0_ds_HVLM_a9_tp20_reward2_di_fifo_TF\config.json"
+    fn = "experiments/0_ds_HVLM_a9_tp630_reward4_di_fifo_\config.json"
     with open(fn, 'r') as config:
         p = json.load(config)['params']
     args = dict(num_actions=p['action_count'], active_station_group=p['station_group'],
