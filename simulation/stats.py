@@ -6,6 +6,7 @@ from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 from classes import Lot, Step
 
@@ -13,8 +14,18 @@ lot_list = []
 percentile_list = []
 
 def save_percentile(instance):
-    df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
-    df.to_csv('percentil_' + instance.rpt_route + ".csv", index=False)
+    output_file = 'percentil_' + instance.rpt_route + ".csv"
+    if not os.path.exists(output_file):
+        df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
+        df.to_csv(output_file, index=False)
+    else:
+        df_acc = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
+        value= pd.read_csv(output_file)['Value'].min()
+        if df_acc['Value'].min() < value:
+            df_acc.to_csv(output_file, index=False)
+    percentile_list.clear()
+    # df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
+    # df.to_csv('percentil_' + instance.rpt_route + ".csv", index=False)
 
 def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy', wip = False):
     from instance import Instance
@@ -56,11 +67,12 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
                 apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
                 dl[lot.name] = lot.deadline_at - lot.release_at
             lot_list.append((lot.done_at-lot.release_at)/60/60/24)
-    for i in range(0,11):
-        percentile_list.append(["Percentil "+ str(i*10), np.percentile(lot_list, i*10)])
-    print("RPT - 0%-Percentile:", np.percentile(lot_list, 0))
-    print("RPT - 100%-Percentile:", np.percentile(lot_list, 100))
-    save_percentile(instance)
+    if instance.rpt_route is not None:
+        for i in range(0,11):
+            percentile_list.append(["Percentil "+ str(i*10), np.percentile(lot_list, i*10)])
+        print("RPT - 0%-Percentile:", np.percentile(lot_list, 0))
+        print("RPT - 100%-Percentile:", np.percentile(lot_list, 100))
+        save_percentile(instance)
     print('Lot', 'APT', 'DL', 'ACT', 'TH', 'ONTIME', 'tardiness', 'early_tardiness', 'wa', 'pr', 'tr')
     acts = []
     ths = []
@@ -84,48 +96,49 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
     print(round(statistics.mean(acts), 2), statistics.mean(ths), statistics.mean(ontimes))
     print(round(sum(acts), 2), sum(ths), sum(ontimes))
 
-    utilized_times = defaultdict(lambda: [])
-    setup_times = defaultdict(lambda: [])
-    pm_times = defaultdict(lambda: [])
-    br_times = defaultdict(lambda: [])
-    for machine in instance.machines:
-        utilized_times[machine.family].append(machine.utilized_time)
-        setup_times[machine.family].append(machine.setuped_time)
-        pm_times[machine.family].append(machine.pmed_time)
-        br_times[machine.family].append(machine.bred_time)
+    if instance.rpt_route is None:
+        utilized_times = defaultdict(lambda: [])
+        setup_times = defaultdict(lambda: [])
+        pm_times = defaultdict(lambda: [])
+        br_times = defaultdict(lambda: [])
+        for machine in instance.machines:
+            utilized_times[machine.family].append(machine.utilized_time)
+            setup_times[machine.family].append(machine.setuped_time)
+            pm_times[machine.family].append(machine.pmed_time)
+            br_times[machine.family].append(machine.bred_time)
 
-    print('Machine', 'Cnt', 'avail','util', 'br', 'pm', 'setup')
-    machines = defaultdict(lambda: {})
-    for machine_name in sorted(list(utilized_times.keys())):
-        time = instance.current_time - 31536000 #if not wip else instance.current_time
-        av = (time - statistics.mean(pm_times[machine_name]) - statistics.mean(br_times[machine_name]))
-        machines[machine_name]['avail'] = av / time
-        machines[machine_name]['util'] = statistics.mean(utilized_times[machine_name]) / av
-        machines[machine_name]['pm'] = statistics.mean(pm_times[machine_name]) / time
-        machines[machine_name]['br'] = statistics.mean(br_times[machine_name]) / time
-        machines[machine_name]['setup'] = statistics.mean(setup_times[machine_name]) / time
-        r = instance.lot_waiting_at_machine[machine_name]
-        if r[0] > 0 and r[1] > 0:
-            machines[machine_name]['waiting_time'] = r[1] / r[0] / 3600 / 24
-        print(machine_name, len(utilized_times[machine_name]),
-              round(machines[machine_name]['avail'] * 100, 2),
-              round(machines[machine_name]['util'] * 100, 2),
-              round(machines[machine_name]['br'] * 100, 2),
-              round(machines[machine_name]['pm'] * 100, 2),
-              round(machines[machine_name]['setup'] * 100, 2))
+        print('Machine', 'Cnt', 'avail','util', 'br', 'pm', 'setup')
+        machines = defaultdict(lambda: {})
+        for machine_name in sorted(list(utilized_times.keys())):
+            time = instance.current_time - 31536000 #if not wip else instance.current_time
+            av = (time - statistics.mean(pm_times[machine_name]) - statistics.mean(br_times[machine_name]))
+            machines[machine_name]['avail'] = av / time
+            machines[machine_name]['util'] = statistics.mean(utilized_times[machine_name]) / av
+            machines[machine_name]['pm'] = statistics.mean(pm_times[machine_name]) / time
+            machines[machine_name]['br'] = statistics.mean(br_times[machine_name]) / time
+            machines[machine_name]['setup'] = statistics.mean(setup_times[machine_name]) / time
+            r = instance.lot_waiting_at_machine[machine_name]
+            if r[0] > 0 and r[1] > 0:
+                machines[machine_name]['waiting_time'] = r[1] / r[0] / 3600 / 24
+            print(machine_name, len(utilized_times[machine_name]),
+                round(machines[machine_name]['avail'] * 100, 2),
+                round(machines[machine_name]['util'] * 100, 2),
+                round(machines[machine_name]['br'] * 100, 2),
+                round(machines[machine_name]['pm'] * 100, 2),
+                round(machines[machine_name]['setup'] * 100, 2))
 
-    plugins = {}
+        plugins = {}
 
-    for plugin in instance.plugins:
-        if plugin.get_output_name() is not None:
-            plugins[plugin.get_output_name()] = plugin.get_output_value()
+        for plugin in instance.plugins:
+            if plugin.get_output_name() is not None:
+                plugins[plugin.get_output_name()] = plugin.get_output_value()
 
-    with io.open(f'{dir}/{method}_{days}days_{dataset}_{disp}.json', 'w') as f:
-        json.dump({
-            'lots': lots,
-            'machines': machines,
-            'plugins': plugins,
-        }, f)
+        with io.open(f'{dir}/{method}_{days}days_{dataset}_{disp}.json', 'w') as f:
+            json.dump({
+                'lots': lots,
+                'machines': machines,
+                'plugins': plugins,
+            }, f)
 
     # df = pd.DataFrame(data=lots)
     # #delayed = pd.DataFrame(data=dl)
