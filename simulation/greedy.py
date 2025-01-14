@@ -40,7 +40,7 @@ def find_alternative_machine(instance, lots, machine):
     return machine
 
 def max_batch(lots):     
-    if len(lots) > lots[0].actual_step.batch_max:
+    if len(lots) >= lots[0].actual_step.batch_max:
         lots = lots[:lots[0].actual_step.batch_max]
     if len(lots) < lots[0].actual_step.batch_max:
         lots = None
@@ -50,7 +50,10 @@ def min_batch(lots):
     if len(lots) < lots[0].actual_step.batch_min:
         lots = None
     elif len(lots) > lots[0].actual_step.batch_min:
-        lots = lots[:lots[0].actual_step.batch_min]
+        if len(lots) >= lots[0].actual_step.batch_max:
+            lots = lots[:lots[0].actual_step.batch_max]
+        else:
+            lots = lots
     return lots
 
 
