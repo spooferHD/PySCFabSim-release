@@ -8,26 +8,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-from classes import Lot, Step
+from classes import Lot
 
 lot_list = []
 percentile_list = []
 
 def save_percentile(instance):
+    global percentile_list
     output_file = 'percentil_' + instance.rpt_route + ".csv"
     if not os.path.exists(output_file):
         df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
         df.to_csv(output_file, index=False)
     else:
         df_acc = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
-        value= pd.read_csv(output_file)['Value'].min()
-        if df_acc['Value'].min() < value:
+        value_min= pd.read_csv(output_file)['Value'].min()
+        value_max= pd.read_csv(output_file)['Value'].max()
+        if df_acc['Value'].min() < value_min and df_acc['Value'].max() > value_max:
             df_acc.to_csv(output_file, index=False)
-    percentile_list.clear()
-    # df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
-    # df.to_csv('percentil_' + instance.rpt_route + ".csv", index=False)
+    percentile_list = []
 
 def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy', wip = False):
+    global percentile_list
     from instance import Instance
     instance: Instance
     lot: Lot
@@ -37,8 +38,10 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
     dl = {}
     print("SUM_CQT_VIOLATIONS:", instance.counter_cqt_violated)
     for lot in instance.done_lots:
-        lots[lot.name]['throughput'] += 1
-        if wip == False and lot.release_at >= 31536000:
+        #lots[lot.name]['throughput'] += 1
+        if wip == False and lot.release_at < 31536000 and instance.rpt_route is None:
+            continue
+        if wip == False and lot.release_at >= 31536000 and instance.rpt_route is None:
             lots[lot.name]['throughput_one_year'] += 1
             lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
             lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
@@ -53,23 +56,29 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
                 apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
                 dl[lot.name] = lot.deadline_at - lot.release_at
         else:
-            lots[lot.name]['throughput_one_year'] += 1
-            lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
-            lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
-            lots[lot.name]['early_tardiness'] += max(0, lot.deadline_at - lot.done_at)
-            lots[lot.name]['waiting_time'] += lot.waiting_time
-            lots[lot.name]['waiting_time_batching'] += lot.waiting_time_batching
-            lots[lot.name]['processing_time'] += lot.processing_time
-            lots[lot.name]['transport_time'] += lot.transport_time
-            if lot.done_at <= lot.deadline_at:
-                lots[lot.name]['on_time'] += 1
-            if lot.name not in apt:
-                apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
-                dl[lot.name] = lot.deadline_at - lot.release_at
-            lot_list.append((lot.done_at-lot.release_at)/60/60/24)
+            if lot.release_at >= 0.0:
+                lots[lot.name]['throughput_one_year'] += 1
+                lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
+                lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
+                lots[lot.name]['early_tardiness'] += max(0, lot.deadline_at - lot.done_at)
+                lots[lot.name]['waiting_time'] += lot.waiting_time
+                lots[lot.name]['waiting_time_batching'] += lot.waiting_time_batching
+                lots[lot.name]['processing_time'] += lot.processing_time
+                lots[lot.name]['transport_time'] += lot.transport_time
+                if lot.done_at <= lot.deadline_at:
+                    lots[lot.name]['on_time'] += 1
+                if lot.name not in apt:
+                    apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
+                    dl[lot.name] = lot.deadline_at - lot.release_at
+                lot_list.append((lot.done_at-lot.release_at)/60/60/24)
     if instance.rpt_route is not None:
-        for i in range(0,11):
-            percentile_list.append(["Percentil "+ str(i*10), np.percentile(lot_list, i*10)])
+        percentile_list.append(["Percentil "+ "0%", np.percentile(lot_list, 0)])
+        percentile_list.append(["Percentil "+ "5%", np.percentile(lot_list, 5)])
+        percentile_list.append(["Percentil "+ "25%", np.percentile(lot_list, 25)])
+        percentile_list.append(["Percentil "+ "50%", np.percentile(lot_list, 50)])
+        percentile_list.append(["Percentil "+ "75%", np.percentile(lot_list, 75)])
+        percentile_list.append(["Percentil "+ "95%", np.percentile(lot_list, 95)])
+        percentile_list.append(["Percentil "+ "100%", np.percentile(lot_list, 100)])
         print("RPT - 0%-Percentile:", np.percentile(lot_list, 0))
         print("RPT - 100%-Percentile:", np.percentile(lot_list, 100))
         save_percentile(instance)
@@ -82,7 +91,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
         avg = statistics.mean(l['ACT']) / 3600 / 24
         lots[lot_name]['ACT'] = avg
         acts += [avg]
-        th = lots[lot_name]['throughput']
+        th = lots[lot_name]['throughput_one_year']
         ths += [th]
         ontime = round(l['on_time'] / l['throughput_one_year'] * 100)
         ontimes += [ontime]
@@ -110,7 +119,10 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
         print('Machine', 'Cnt', 'avail','util', 'br', 'pm', 'setup')
         machines = defaultdict(lambda: {})
         for machine_name in sorted(list(utilized_times.keys())):
-            time = instance.current_time - 31536000 #if not wip else instance.current_time
+            if wip == False and instance.rpt_route is None:
+                time = instance.current_time - 31536000 #if not wip else instance.current_time
+            else:
+                time = instance.current_time
             av = (time - statistics.mean(pm_times[machine_name]) - statistics.mean(br_times[machine_name]))
             machines[machine_name]['avail'] = av / time
             machines[machine_name]['util'] = statistics.mean(utilized_times[machine_name]) / av
@@ -140,8 +152,3 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
                 'plugins': plugins,
             }, f)
 
-    # df = pd.DataFrame(data=lots)
-    # #delayed = pd.DataFrame(data=dl)
-    # df.plot()
-    # #delayed.plot()
-    # plt.show()
