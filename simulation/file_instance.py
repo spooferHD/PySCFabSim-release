@@ -89,13 +89,16 @@ class FileInstance(Instance):
             if wip['CURSTEP'] < len(routes[parts[wip['PART']]].steps) - 1:
                 lot = Lot(idx, routes[parts[wip['PART']]], wip['PRIOR'], first_release, relative_deadline, wip)
                 lots.append(lot)
+                #relative_release = lot.deadline_at - lot_pre[lot.name]
+                #lot.release_at = max(relative_release, 0)
                 lot.release_at = lot.deadline_at - lot_pre[lot.name]
             idx += 1
 
-        setups = {(s['CURSETUP'], s['NEWSETUP']): get_interval(s['STIME'], s['STUNITS']) for s in files['setup.txt']}
         if self.rpt_route is not None:
-            setup_min_run = {s['SETUP']: 1 for s in files['setupgrp.txt']}
+            setups = {(s['CURSETUP'], s['NEWSETUP']): get_interval(0, s['STUNITS']) for s in files['setup.txt']}
+            setup_min_run = {s['SETUP']: 0 for s in files['setupgrp.txt']}
         else:
+            setups = {(s['CURSETUP'], s['NEWSETUP']): get_interval(s['STIME'], s['STUNITS']) for s in files['setup.txt']}
             setup_min_run = {s['SETUP']: s['MINRUN'] for s in files['setupgrp.txt']}
 
         downcals = {}
