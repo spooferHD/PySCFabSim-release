@@ -243,7 +243,6 @@ def run_greedy():
     sys.stderr.flush()
 
     while not instance.done:
-        #instance.setups_per_machine()
         done = instance.next_decision_point()
         instance.print_progress_in_days()
         if done or instance.current_time > run_to:
@@ -254,9 +253,7 @@ def run_greedy():
             if lots is None:
                 instance.usable_machines.remove(machine)
             else:
-                #action = Rl.choose()
                 instance.dispatch(machine, lots)
-                #instance.save_step_watch()
         else:
             machine, lots = get_lots_to_dispatch_by_lot(instance, instance.current_time, dispatcher)
             if lots is None:
@@ -266,12 +263,7 @@ def run_greedy():
             else:
                 instance.dispatch(machine, lots)
         
-    #instance.save_waiting_time_tables()
-    #instance.save_pm_br_tables()
-    instance.rework_proofed()
-    instance.save_setup_per_machine()
-    instance.save_setup_when_needed()
-    instance.save_step_watch()
+    #instance.save_setup_when_needed()
     instance.finalize()
     interval = datetime.now() - start_time
     print(instance.current_time_days, ' days simulated in ', interval)
