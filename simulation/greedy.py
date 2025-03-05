@@ -185,23 +185,23 @@ def run_greedy():
     p.add_argument('--WIP', type=bool, default=True)
     p.add_argument('--rpt_mode', type=bool, default=None)
     p.add_argument('--rpt_route', type=str, default=None)
-    p.add_argument('--batch_strat', type=str, default="Max") #Max,Min, RoundRobin
+    p.add_argument('--batch_strat', type=str, default="Max", choices=['Max', 'Min', 'RoundRobin', 'Demand']) #Max,Min, RoundRobin, Demand
     a = p.parse_args()
     seed = random.randint(1, 10000)
     a.dataset = 'SMT2020_HVLM'
     a.days = 730
     a.dispatcher = 'fifo'
     a.seed = seed
-    a.WIP = False 
+    a.WIP = True 
     a.rpt_mode = False
-    #a.rpt_route = 4
-    a.batch_strat = 'RoundRobin'
+    a.rpt_route = None
+    a.batch_strat = 'Demand'
     if a.rpt_mode and not None:
         if a.rpt_route:
             print('RPT mode is on')
             a.rpt_route = "part_" + str(a.rpt_route)
             a.WIP = False 
-            a.days = 730
+            a.days = 720
         else:
             print('RPT mode is on, but no route is given')
             exit()
