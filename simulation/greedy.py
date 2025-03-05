@@ -49,13 +49,21 @@ def max_batch(lots):
 def min_batch(lots):   
     if len(lots) < lots[0].actual_step.batch_min:
         lots = None
-    elif len(lots) > lots[0].actual_step.batch_min:
+    elif len(lots) >= lots[0].actual_step.batch_min:
         if len(lots) >= lots[0].actual_step.batch_max:
             lots = lots[:lots[0].actual_step.batch_max]
         else:
             lots = lots
     return lots
 
+def demand_batch(lots):
+    if len(lots) >= lots[0].actual_step.batch_max:
+        lots = lots[:lots[0].actual_step.batch_max]
+    elif len(lots) < lots[0].actual_step.batch_max and len(lots) >= lots[0].actual_step.batch_min:
+        lots = lots
+    else:
+        lots = None
+    return lots
 
 def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
     global round_robin	
@@ -94,6 +102,9 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
             if instance.batch_strat == 'RoundRobin':
                 lots = max_batch(lots) if not round_robin else min_batch(lots)
                 round_robin = not round_robin
+            if instance.batch_strat == 'Demand':
+                lots = demand_batch(lots)
+                
     else:
         # dispatch single lot
         lots = [lot]
