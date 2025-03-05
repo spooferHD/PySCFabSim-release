@@ -43,32 +43,13 @@ class Instance:
         self.active_lots: List[Lot] = []
         self.done_lots: List[Lot] = []
 
-        self.events = EventQueue()      
-        #self.List_Route3_RegularLot= []
-        #self.List_Route4_RegularLot = []
+        self.events = EventQueue()    
 
-        #self.List_PM_MaschineID = []
-        #self.List_BD_MaschineID = []
-
-        self.machine_dict = {
-            'Implant_90': {},
-            'Implant_119': {},
-            'LithoTrack_FE_115': {},
-            'DE_BE_66': {},
-            'DE_BE_13': {},
-            'Implant_128': {},
-            'Implant_91': {},
-            'Implant_132': {},
-            'LithoTrack_FE_95': {}
-        }
-
-        self.setup_per_timestep_when_needed = {}
+        #self.setup_per_timestep_when_needed = {}
         self.counter_cqt_violated = 0
 
-        self.current_time = 0
-        self.new_br = None   
+        self.current_time = 0 
 
-        self.step_watch = []
         for plugin in self.plugins:
             plugin.on_sim_init(self)
 
@@ -195,7 +176,6 @@ class Instance:
                 self.events.remove(event)
                 s = event.handle_timebased_pm(self)
                 machine_time += s
-                #self.List_PM_MaschineID.append([machine.idx, machine.family, event.timestamp, event.timestamp + s, event.br_name])
             if event.timestamp > look_ahead_time:
                     break
 
@@ -210,9 +190,6 @@ class Instance:
                 machine.min_runs_left = None
                 machine.min_runs_setup = None
         # add events
-        for lot in lots:
-            if lot.idx == 49:
-                self.step_watch.append([lot.actual_step.idx+1, self.current_time/60/60/24, (self.current_time + lot_time)/60/60/24])
         machine_done = self.current_time + machine_time + setup_time
         lot_done = self.current_time + lot_time + setup_time
         ev1 = MachineDoneEvent(machine_done, [machine])
@@ -302,75 +279,30 @@ class Instance:
                     f'\rDay {self.printed_days}===Throughput: {round(len(self.done_lots) / self.printed_days)}/day=')
                 sys.stderr.flush()
 
-    # def save_waiting_time_tables(self):
-    #     with open('waiting_time_table.pkl', 'wb') as f:
-    #         pickle.dump(self.List_Route3_RegularLot, f)
-    #         pickle.dump(self.List_Route4_RegularLot, f)
-
-    # def save_pm_br_tables(self):
-    #     with open('pm_br_table.pkl', 'wb') as f:
-    #         pickle.dump(self.List_PM_MaschineID, f)
-    #         pickle.dump(self.List_BD_MaschineID, f)
-
-    def rework_proofed(self):
-        route_3_rwork_in_percent = []
-        route_4_rwork_in_percent = []
-        for route in self.routes:
-            for step in self.routes[route].steps:
-                if step.rework_step != 0 and route == 'route_3.txt':
-                    route_3_rwork_in_percent.append([step.idx, len(step.reworked)])
-                elif step.rework_step != 0 and route == 'route_4.txt':
-                    route_4_rwork_in_percent.append([step.idx, len(step.reworked)])
-                elif step.rework_step == 0 and route == 'route_3.txt':
-                    route_3_rwork_in_percent.append([step.idx, 0])
-                elif step.rework_step == 0 and route == 'route_4.txt':
-                    route_4_rwork_in_percent.append([step.idx, 0])
-        with open('rework_table.pkl', 'wb') as f:
-            pickle.dump(route_3_rwork_in_percent, f)
-            pickle.dump(route_4_rwork_in_percent, f)
-
-    def setups_per_machine(self):
-
-        if self.current_time % 86400 == 0 and self.current_time_days > 0:
-            for machine in self.machines:
-                if machine.family in self.machine_dict:
-                    if int(self.current_time_days) not in self.machine_dict[machine.family]:
-                        self.machine_dict[machine.family][int(self.current_time_days)] = {machine.current_setup: 1}
-                    elif machine.current_setup not in self.machine_dict[machine.family][int(self.current_time_days)]:
-                        self.machine_dict[machine.family][int(self.current_time_days)][machine.current_setup] = 1
-                    else:
-                        self.machine_dict[machine.family][int(self.current_time_days)][machine.current_setup] += 1
-
-    def setup_count_when_needed(self, machine, setup_needed):
-        if self.current_time > 0:
-            #if self.current_time not in self.setup_per_timestep_when_needed[machine.family] or self.setup_count_when_needed == {}:
-                self.setup_per_timestep_when_needed[int(self.current_time)] = [setup_needed, 'Verfügbar',{machine.family: {}}, 'Nicht frei', {machine.family: {}}]
-                self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family]= {machine.current_setup: 1}
-                for machines in self.machines:
-                    if machines.idx != machine.idx:
-                        if self.free_machines[machines.idx] == True:
-                            if machines.family == machine.family:
-                                if machines.current_setup in self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family]:
-                                    self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family][machines.current_setup] += 1
-                                else:
-                                    self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family][machines.current_setup] =  1
-                        else:
-                            if machines.family == machine.family:
-                                if machines.current_setup in self.setup_per_timestep_when_needed[int(self.current_time)][4][machine.family]:
-                                    self.setup_per_timestep_when_needed[int(self.current_time)][4][machine.family][machines.current_setup] += 1
-                                else:
-                                    self.setup_per_timestep_when_needed[int(self.current_time)][4][machine.family][machines.current_setup] =  1
+    # def setup_count_when_needed(self, machine, setup_needed):
+    #     if self.current_time > 0:
+    #         #if self.current_time not in self.setup_per_timestep_when_needed[machine.family] or self.setup_count_when_needed == {}:
+    #             self.setup_per_timestep_when_needed[int(self.current_time)] = [setup_needed, 'Verfügbar',{machine.family: {}}, 'Nicht frei', {machine.family: {}}]
+    #             self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family]= {machine.current_setup: 1}
+    #             for machines in self.machines:
+    #                 if machines.idx != machine.idx:
+    #                     if self.free_machines[machines.idx] == True:
+    #                         if machines.family == machine.family:
+    #                             if machines.current_setup in self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family]:
+    #                                 self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family][machines.current_setup] += 1
+    #                             else:
+    #                                 self.setup_per_timestep_when_needed[int(self.current_time)][2][machine.family][machines.current_setup] =  1
+    #                     else:
+    #                         if machines.family == machine.family:
+    #                             if machines.current_setup in self.setup_per_timestep_when_needed[int(self.current_time)][4][machine.family]:
+    #                                 self.setup_per_timestep_when_needed[int(self.current_time)][4][machine.family][machines.current_setup] += 1
+    #                             else:
+    #                                 self.setup_per_timestep_when_needed[int(self.current_time)][4][machine.family][machines.current_setup] =  1
 
 
-    def save_setup_per_machine(self):
-        with open('setup_per_machine.pkl', 'wb') as f:
-            pickle.dump(self.machine_dict, f)
 
-    def save_setup_when_needed(self):
-        with open('setup_when_needed.pkl', 'wb') as f:
-            pickle.dump(self.setup_per_timestep_when_needed, f)
-        
-    def save_step_watch(self):
-        df = pd.DataFrame(self.step_watch, columns=['Step', 'Start', 'End'])
-        df.to_csv('step_watch.csv', index=False)
+    # def save_setup_when_needed(self):
+    #     with open('setup_when_needed.pkl', 'wb') as f:
+    #         pickle.dump(self.setup_per_timestep_when_needed, f)
+    
                 
