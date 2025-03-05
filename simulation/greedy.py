@@ -79,7 +79,7 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
         # construct batch
         lot_m = defaultdict(lambda: [])
         for w in wl:
-            lot_m[w.actual_step.step_name].append(w)  # + '_' + w.part_name
+            lot_m[w.actual_step.step_name + '_' + w.part_name].append(w) 
         lot_l = sorted(list(lot_m.values()),
                        key=lambda l: (
                            l[0].ptuple[0],  # min run setup 
