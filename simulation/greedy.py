@@ -270,7 +270,7 @@ def run_greedy():
     print_statistics(instance, a.days, a.dataset, a.dispatcher, method='greedy_seed' + str(a.seed), wip=a.WIP)
     
 
-def run_greedy_RL(dataset, RL_days, greedy_days, dispatcher, seed, wandb, chart, alg='l4m'):
+def run_greedy_RL(dataset, RL_days, greedy_days, dispatcher, seed, wandb, chart, alg='l4m', rpt_mode=False, rpt_route=None, batch_strat='Demand'):
      
     sys.stderr.write('Loading ' + dataset + ' for ' + str(greedy_days) + ' days, using ' + dispatcher + '\n')
     sys.stderr.flush()
@@ -278,7 +278,9 @@ def run_greedy_RL(dataset, RL_days, greedy_days, dispatcher, seed, wandb, chart,
     start_time = datetime.now()
 
     files = read_all('datasets/' + dataset)
-
+    rpt_route = rpt_route
+    rpt_mode = rpt_mode
+    batch_strat = batch_strat
     run_to = 3600 * 24 * RL_days
     greedy_run_to = 3600 * 24 * greedy_days
     Randomizer().random.seed(seed)
@@ -292,7 +294,7 @@ def run_greedy_RL(dataset, RL_days, greedy_days, dispatcher, seed, wandb, chart,
         from plugins.chart_plugin import ChartPlugin
         plugins.append(ChartPlugin())
     plugins.append(CostPlugin())
-    instance = FileInstance(files, run_to, l4m, plugins)
+    instance = FileInstance(files, run_to, l4m, plugins, rpt_route, batch_strat)
 
     dispatcher = dispatcher_map[dispatcher]
 
