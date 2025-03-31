@@ -32,13 +32,15 @@ def main():
     
     args = dict(seed=0, num_actions=config['action_count'], active_station_group=config['station_group'], days=testing_days,
                 dataset='SMT2020_' + config['dataset'], dispatcher=config['dispatcher'], reward_type=config['reward'])
-    
+    rpt_mode = False
+    rpt_route = False
+    batch_strat = 'Demand'
     
     plugins = []
     if wandb:
         from simulation.plugins.wandb_plugin import WandBPlugin
         plugins.append(WandBPlugin())
-    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, max_steps=1000000000, plugins=plugins, greedy_instance=None)
+    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'],greedy_instance=greedy_instance, plugins=[] , rpt_mode=rpt_mode, rpt_route=rpt_route, batch_strat=batch_strat)
     obs = env.reset()
     #print("obs", obs)
     reward = 0

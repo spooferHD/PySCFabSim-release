@@ -33,7 +33,7 @@ STATE_COMPONENTS_DEMO = (
 class DynamicSCFabSimulationEnvironment(Env):
 
     def __init__(self, num_actions, active_station_group, days, dataset, dispatcher, seed, max_steps,
-                 reward_type, action, state_components, greedy_instance,plugins=None, ):
+                 reward_type, action, state_components, greedy_instance,plugins=None, rpt_mode=False, rpt_route=False, batch_strat='Demand', WIP=False):
         self.did_reset = False
         self.files = read_all('datasets/' + dataset)
         self.instance = None
@@ -54,6 +54,10 @@ class DynamicSCFabSimulationEnvironment(Env):
         self.state_components = state_components
         self.plugins = plugins
         self.stepbuffer={}  
+        self.rpt_mode = rpt_mode
+        self.rpt_route = rpt_route
+        self.batch_strat = batch_strat
+        self.WIP = WIP
         self.greedy_instance = copy.deepcopy(greedy_instance)
         self.reset()
 
@@ -292,7 +296,9 @@ class DynamicSCFabSimulationEnvironment(Env):
             else:
                 self.lots_done = 0
                 run_to = 3600 * 24 * self.days
-                self.instance = FileInstance(self.files, run_to, True, self.plugins)
+                if self.WIP == False:
+                    self.files['WIP.txt'] = self.files['WIPempty.txt']
+                self.instance = FileInstance(self.files, run_to, True, self.plugins, self.rpt_route, self.batch_strat)
             Randomizer().random.seed(self.seed_val)
             self.seed_val += 1
             self.step_buffer()

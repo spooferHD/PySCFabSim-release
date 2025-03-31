@@ -20,7 +20,7 @@ from simulation.gym.sample_envs import DEMO_ENV_1
 
 def main():
     to_train = 608000  #10000000 # 608000 für 730 Tage --> 32 Jahre Trainingszeit (mit Initialisierungsphase)
-    greedy_days = 30
+    greedy_days = 10
     t = time.time()
     save_freq = 500 
     class MyCallBack(CheckpointCallback):
@@ -36,7 +36,10 @@ def main():
             return super().on_step()
 
     #fn = argv[1]
-    fn = "experiments/0_ds_HVLM_a9_tp630_reward4_di_fifo_\config.json"
+    fn = "experiments/0_ds_HVLM_a9_tp630_reward4_di_fifo_TF_BE_40\config.json"
+    rpt_mode = False
+    rpt_route = False
+    batch_strat = 'Demand'
     with open(fn, 'r') as config:
         p = json.load(config)['params']
     args = dict(num_actions=p['action_count'], active_station_group=p['station_group'],
@@ -45,12 +48,13 @@ def main():
     args_eval= dict(num_actions=p['action_count'], active_station_group=p['station_group'], dataset='SMT2020_' + p['dataset'],
                 dispatcher=p['dispatcher'])
     print(f'Greedy ENV bis {greedy_days} Tage erstellt')
-    greedy_instance =run_greedy_RL('SMT2020_' + p['dataset'],p['training_period'] , greedy_days, p['dispatcher'], 0, False, False, alg='l4m')
+    #greedy_instance =run_greedy_RL('SMT2020_' + p['dataset'],p['training_period'] , greedy_days, p['dispatcher'], 0, False, False, alg='l4m')
+    greedy_instance = None
     print("Greedy Instance abgeschlossen")
     print("Args angenommen")
-    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'],greedy_instance=greedy_instance, plugins=[] )
+    env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args, seed=p['seed'], max_steps=10000000, reward_type=p['reward'],greedy_instance=greedy_instance, plugins=[] , rpt_mode=rpt_mode, rpt_route=rpt_route, batch_strat=batch_strat)
     print("Env erstellt")
-    eval_env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args_eval, days= 265, seed=777, max_steps=0, reward_type=p['reward'], greedy_instance=greedy_instance,plugins=[])
+    eval_env = DynamicSCFabSimulationEnvironment(**DEMO_ENV_1, **args_eval, days= 265, seed=777, max_steps=0, reward_type=p['reward'], greedy_instance=greedy_instance,plugins=[], rpt_mode=rpt_mode, rpt_route=rpt_route, batch_strat=batch_strat)
     print("Alles erstellt - ich lerne jz")
     model = PPO("MlpPolicy", env, verbose=1)
     #Callbacks
