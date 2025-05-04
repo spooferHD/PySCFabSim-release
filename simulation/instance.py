@@ -4,8 +4,8 @@ import os
 import sys
 
 import pandas as pd
-sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
-sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation', 'gym'))
+sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
+sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation', 'gym'))
 from classes import Machine, Route, Lot
 from dispatching.dm_lot_for_machine import LotForMachineDispatchManager
 from dispatching.dm_machine_for_lot import MachineForLotDispatchManager
@@ -218,8 +218,8 @@ class Instance:
             cascade_t_samp = lots[0].actual_step.cascading_time.sample()
         machine_time = cascade_t_samp + (machine.load_time + machine.unload_time if not machine.cascading else 0)
         new_setup = lots[0].actual_step.setup_needed
-        if new_setup != '':
-            self.setup_count_when_needed(machine, new_setup)
+        # if new_setup != '':
+        #     self.setup_count_when_needed(machine, new_setup)
         if new_setup != '' and machine.current_setup != new_setup:
             if lots[0].actual_step.setup_time is not None:
                 setup_time = lots[0].actual_step.setup_time             # SetupTime für in der Route geplante Setups
