@@ -9,6 +9,8 @@ import argparse
 from stable_baselines3 import PPO
 sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
 sys.path.append(os.path.join('data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation'))
+sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation'))
+
 from simulation.gym.environment import DynamicSCFabSimulationEnvironment
 from simulation.gym.sample_envs import DEMO_ENV_1
 from simulation.stats import print_statistics

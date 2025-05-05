@@ -1,7 +1,9 @@
 import os
 import sys
 #sys.path.append(os.path.join(os.path.sep, 'data','horse','ws','wiro085f-WsRodmann','Final_Version','PySCFabSim', 'simulation'))
-sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
+#sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
+sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation'))
+#sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation', 'gym'))
 from collections import defaultdict
 from datetime import datetime
 from typing import List
@@ -119,7 +121,7 @@ def get_lots_to_dispatch_by_machine(instance, ptuple_fcn, machine=None):
                     if machine:
                         lot.dedications.pop(d)
                         break
-        
+        # Das hier ist exterm wichtig, dass die LSSU-Regel eingehalten wird. 
         elif lot.actual_step.setup_needed != '' and machine.current_setup != lot.actual_step.setup_needed:
             machine = find_alternative_machine(instance, lots, machine)
         
