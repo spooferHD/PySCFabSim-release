@@ -37,8 +37,10 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
     dl = {}
     print("SUM_CQT_VIOLATIONS:", instance.counter_cqt_violated)
     for lot in instance.done_lots:
-        lots[lot.name]['throughput'] += 1
-        if wip == False and lot.release_at >= 31536000:
+        if lot.release_at >= 0:
+            lots[lot.name]['throughput'] += 1
+        
+        if lot.release_at >= 31536000:   
             lots[lot.name]['throughput_one_year'] += 1
             lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
             lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
@@ -53,7 +55,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
                 apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
                 dl[lot.name] = lot.deadline_at - lot.release_at
         else:
-            lots[lot.name]['throughput_one_year'] += 1
+            #lots[lot.name]['throughput_one_year'] += 1
             lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
             lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
             lots[lot.name]['early_tardiness'] += max(0, lot.deadline_at - lot.done_at)
@@ -73,7 +75,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
         print("RPT - 0%-Percentile:", np.percentile(lot_list, 0))
         print("RPT - 100%-Percentile:", np.percentile(lot_list, 100))
         save_percentile(instance)
-    print('Lot', 'APT', 'DL', 'ACT', 'TH', 'ONTIME', 'tardiness', 'early_tardiness', 'wa', 'pr', 'tr')
+    print('Lot', 'APT', 'DL', 'ACT', 'TH', 'ONTIME', 'tardiness', 'early_tardiness', 'wa', 'wab', 'pr', 'tr')
     acts = []
     ths = []
     ontimes = []
@@ -84,7 +86,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
         acts += [avg]
         th = lots[lot_name]['throughput']
         ths += [th]
-        ontime = round(l['on_time'] / l['throughput_one_year'] * 100)
+        ontime = round(l['on_time'] / l['throughput_one_year'] * 100,2)
         ontimes += [ontime]
         wa = lots[lot_name]['waiting_time'] / l['throughput_one_year'] / 3600 / 24
         wab = lots[lot_name]['waiting_time_batching'] / l['throughput_one_year'] / 3600 / 24
@@ -95,6 +97,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
     print('---------------')
     print(round(statistics.mean(acts), 2), statistics.mean(ths), statistics.mean(ontimes))
     print(round(sum(acts), 2), sum(ths), sum(ontimes))
+    print('---------------')
 
     if instance.rpt_route is None:
         utilized_times = defaultdict(lambda: [])
