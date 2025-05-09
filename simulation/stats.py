@@ -6,6 +6,7 @@ from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
 import os
 
 from classes import Lot, Step
@@ -27,7 +28,7 @@ def save_percentile(instance):
     # df = pd.DataFrame(percentile_list, columns=['Percentil', 'Value'])
     # df.to_csv('percentil_' + instance.rpt_route + ".csv", index=False)
 
-def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy', wip = False):
+def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy', wip = False, seed=0):
     from instance import Instance
     instance: Instance
     lot: Lot
@@ -35,6 +36,28 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
                                 'processing_time': 0, 'transport_time': 0, 'waiting_time_batching': 0})
     apt = {}
     dl = {}
+
+    # Verzeichnis anlegen, falls nicht vorhanden
+    os.makedirs(dir, exist_ok=True)
+
+    debug_data = {
+        'seed': seed,
+        'apt': apt,
+        'dl': dl,
+        'instance_done_lots': instance.done_lots,
+        'instance_counter_cqt_violated': instance.counter_cqt_violated,
+        'instance_rpt_route': instance.rpt_route,
+        'instance_machines': instance.machines,
+        'instance_current_time': instance.current_time,
+        #'instance_lot_waiting_at_machine': instance.lot_waiting_at_machine,
+        #'instance_plugins': instance.plugins,        
+        #'lots': lots,
+    }
+
+    with open(f'{dir}/debug_data_{method}_{days}days_{dataset}_{disp}_seed-{seed}.pkl', 'wb') as f:
+        pickle.dump(debug_data, f)
+
+
     print("SUM_CQT_VIOLATIONS:", instance.counter_cqt_violated)
     for lot in instance.done_lots:
         if lot.release_at >= 0:

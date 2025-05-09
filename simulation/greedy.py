@@ -4,6 +4,7 @@ import sys
 #sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
 sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation'))
 #sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation', 'gym'))
+#sys.path.append(os.path.join(os.path.sep, 'projects','p078','p_htw_promentat','Heik_Reproduktion_', 'simulation'))
 from collections import defaultdict
 from datetime import datetime
 from typing import List
@@ -190,6 +191,7 @@ def run_greedy():
     p.add_argument('--batch_strat', type=str, default="Max", choices=['Max', 'Min', 'RoundRobin', 'Demand']) #Max,Min, RoundRobin, Demand
     a = p.parse_args()
     seed = random.randint(1, 10000)
+    seed = 9949  #### ACHTUNG - Fixed Seed
     a.dataset = 'SMT2020_HVLM'
     a.days = 730
     a.dispatcher = 'fifo'
@@ -235,7 +237,7 @@ def run_greedy():
         plugins.append(ChartPlugin())
     plugins.append(CostPlugin())
     instance = FileInstance(files, run_to, l4m, plugins, a.rpt_route, a.batch_strat)
-    if (a.WIP ==False or a.days > 365) and a.rpt_mode == False:
+    if (a.WIP == False or a.days > 365) and a.rpt_mode == False:
         instance.add_event(ResetEvent(31536000))
 
     dispatcher = dispatcher_map[a.dispatcher]
@@ -269,7 +271,7 @@ def run_greedy():
     instance.finalize()
     interval = datetime.now() - start_time
     print(instance.current_time_days, ' days simulated in ', interval)
-    print_statistics(instance, a.days, a.dataset, a.dispatcher, method='greedy_seed' + str(a.seed), wip=a.WIP)
+    print_statistics(instance, a.days, a.dataset, a.dispatcher, method='greedy_seed' + str(a.seed), wip=a.WIP, seed=a.seed)
     
 
 def run_greedy_RL(dataset, RL_days, greedy_days, dispatcher, seed, wandb, chart, alg='l4m'):
