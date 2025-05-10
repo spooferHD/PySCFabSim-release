@@ -59,7 +59,7 @@ def analyze(debug_data):
                 apt[lot.name] = sum([s.processing_time.avg() for s in lot.processed_steps])
                 dl[lot.name] = lot.deadline_at - lot.release_at
         else:
-            #lots[lot.name]['throughput_one_year'] += 1
+            lots[lot.name]['throughput_one_year'] += 1
             lots[lot.name]['ACT'].append(lot.done_at - lot.release_at)
             lots[lot.name]['tardiness'] += max(0, lot.done_at - lot.deadline_at)
             lots[lot.name]['early_tardiness'] += max(0, lot.deadline_at - lot.done_at)
@@ -104,7 +104,7 @@ def analyze(debug_data):
 
 if __name__ == "__main__":
 
-    file = "greedy/debug_data_greedy_seed9949_5days_SMT2020_HVLM_fifo_seed-9949.pkl"
+    file = "greedy/debug_data_greedy_seed9949_730days_SMT2020_HVLM_fifo_seed-9949.pkl"
 
     if not os.path.exists(file):
         print("Datei nicht gefunden:", file)

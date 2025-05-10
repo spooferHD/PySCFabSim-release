@@ -15,9 +15,17 @@ def greedy():
         p = Profiler()
         p.start()
 
-    run_greedy()
-    print()
-    print()
+    for i in range(30):    
+        try:
+            print("HEIK - START DURCHGANG=", i)
+            run_greedy()
+            print("HEIK - ENDE DURCHGANG=" , i)
+            print()
+        except:
+            print("HEIK - Fehler bei DURCHGANG=" , i)
+            print()
+        
+
 
     if profile:
         p.stop()

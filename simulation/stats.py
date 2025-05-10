@@ -122,6 +122,7 @@ def print_statistics(instance, days, dataset, disp, method='greedy', dir='greedy
     print(round(sum(acts), 2), sum(ths), sum(ontimes))
     print('---------------')
 
+    #### Wie im orginal paper wird nach einem Jahr ein Reset-Event im greedy vorgenommen, was die Statistik der maschionen auf 0 zurücksetzt. 
     if instance.rpt_route is None:
         utilized_times = defaultdict(lambda: [])
         setup_times = defaultdict(lambda: [])

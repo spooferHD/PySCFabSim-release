@@ -191,7 +191,6 @@ def run_greedy():
     p.add_argument('--batch_strat', type=str, default="Max", choices=['Max', 'Min', 'RoundRobin', 'Demand']) #Max,Min, RoundRobin, Demand
     a = p.parse_args()
     seed = random.randint(1, 10000)
-    seed = 9949  #### ACHTUNG - Fixed Seed
     a.dataset = 'SMT2020_HVLM'
     a.days = 730
     a.dispatcher = 'fifo'
