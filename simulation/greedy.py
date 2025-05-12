@@ -4,7 +4,7 @@ import sys
 #sys.path.append(os.path.join('C:/','Users','willi','OneDrive','Documents','Studium','Diplomarbeit','Programm + Datengrundlage','PySCFabSim-release-William-Rodmann','simulation'))
 sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation'))
 #sys.path.append(os.path.join('C:/','Users','David Heik','Desktop','Arbeit2024','PySCFabSim','Projekt-Reproduktion','Mai-Session', 'PySCFabSim-release','simulation', 'gym'))
-#sys.path.append(os.path.join(os.path.sep, 'projects','p078','p_htw_promentat','Heik_Reproduktion_', 'simulation'))
+sys.path.append(os.path.join(os.path.sep, 'projects','p078','p_htw_promentat','Heik_Reproduktion_2', 'simulation'))
 from collections import defaultdict
 from datetime import datetime
 from typing import List
